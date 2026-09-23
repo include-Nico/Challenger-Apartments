@@ -1002,4 +1002,5 @@ Nel frattempo, assumendo che tu stia lavorando con CSS per un'interfaccia web, e
     transform: translateY(0) scale(1);
     filter: blur(0);
   }
+</div> );
 }
