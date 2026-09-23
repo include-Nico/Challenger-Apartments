@@ -82,7 +82,6 @@ export default function App() {
   const [listingHorizonDays, setListingHorizonDays] = useState(() => loadSavedState('challenger_horizon', 30));
   const [otaRate, setOtaRate] = useState(() => loadSavedState('challenger_otaRate', 15));
   
-  // STATO SINGOLO APPARTAMENTO - INIZIALMENTE VUOTO
   const [apartment, setApartment] = useState(() => loadSavedState('challenger_apartment', {
     name: "Il Mio Appartamento",
     neighbourhood: "",
@@ -96,12 +95,12 @@ export default function App() {
     dailyExtraFee: ""
   }));
 
-  // CONTROLLO BLOCCO FORM: L'array ora controlla i campi essenziali
   const requiredFields = ['neighbourhood', 'basePrice', 'championPrice', 'floorPrice', 'guests', 'maxGuests', 'extraGuestFee', 'fixedExtraFee', 'dailyExtraFee'];
   const isConfigComplete = requiredFields.every(key => apartment[key] !== "");
 
   const [isTableOpen, setIsTableOpen] = useState(false);
   const [isSimOpen, setIsSimOpen] = useState(false);
+  const [isQuoteOpen, setIsQuoteOpen] = useState(false); // NUOVO STATO PER TENDINA WHATSAPP
   const [isEventsOpen, setIsEventsOpen] = useState(false);
   const [hasViewedEvents, setHasViewedEvents] = useState(false);
   const [quoteDates, setQuoteDates] = useState({ startDate: getTodayISO(), endDate: getFutureISO(3) });
@@ -143,7 +142,6 @@ export default function App() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // FIX: Funzione di salvataggio numeri corretta
   const handleNumChange = (field, value) => {
     const val = value === '' ? '' : Number(value);
     setApartment(prev => ({ ...prev, [field]: val }));
@@ -234,7 +232,7 @@ export default function App() {
   const copyToClipboard = () => { navigator.clipboard.writeText(quoteText); alert("Preventivo copiato negli appunti!"); };
   const openWhatsApp = () => { window.open(`https://wa.me/?text=${encodeURIComponent(quoteText)}`, '_blank'); };
 
-  // STILI GLOBALI E ANIMAZIONI
+  // STILI GLOBALI (Schiacciati)
   const GlobalStyles = () => (
     <style>{`
       .challenger-app-wrapper * { box-sizing: border-box !important; }
@@ -437,21 +435,9 @@ export default function App() {
               <div><label style={{ fontWeight: '700', fontSize: '12px', color: '#475569' }}>Pulizie Fisse Una Tantum (€)</label><input type="number" className="styled-input" value={apartment.fixedExtraFee} onChange={(e) => handleNumChange('fixedExtraFee', e.target.value)} placeholder="Es. 40" /></div>
             </div>
           </div>
-
-          {/* BOX GENERATORE PREVENTIVO WHATSAPP */}
-          {activeTab === 'quote' && isConfigComplete && (
-            <div style={{ background: '#25d3661a', padding: '24px', borderRadius: '16px', border: '1px solid #25d3664d' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}><MessageCircle size={20} color="#16a34a" /><h3 style={{ fontSize: '16px', fontWeight: '800', color: '#166534', margin: 0 }}>Invia Preventivo</h3></div>
-              <textarea readOnly className="styled-input custom-scroll" style={{ height: '140px', fontSize: '13px', backgroundColor: '#fff', cursor: 'text' }} value={quoteText} />
-              <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
-                <button onClick={copyToClipboard} style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', padding: '10px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '13px', fontWeight: '700', color: '#475569', cursor: 'pointer' }}><Copy size={16} /> Copia Testo</button>
-                <button onClick={openWhatsApp} style={{ flex: 2, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', padding: '10px', background: '#25d366', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '700', color: '#fff', cursor: 'pointer' }}><MessageCircle size={16} fill="#fff" /> Invia su WhatsApp</button>
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* GRAFICO E SIMULATORE */}
+        {/* GRAFICO, SIMULATORE E WHATSAPP */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', width: '100%' }}>
           
           <div style={{ background: '#fff', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', width: '100%', overflow: 'hidden', position: 'relative' }}>
@@ -499,6 +485,25 @@ export default function App() {
               </div>
             </div>
           </div>
+
+          {/* GENERATORE WHATSAPP COLLASSABILE */}
+          {activeTab === 'quote' && isConfigComplete && (
+            <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
+              <button onClick={() => setIsQuoteOpen(!isQuoteOpen)} className="tab-btn" style={{ width: '100%', padding: '20px 24px', border: 'none', background: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', textAlign: 'left' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><div style={{ background: '#25d3661a', padding: '8px', borderRadius: '10px' }}><MessageCircle size={20} color="#16a34a" /></div><h2 style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Invia Preventivo WhatsApp</h2></div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#16a34a' }}>{isQuoteOpen ? <ChevronUp size={20} strokeWidth={3} /> : <ChevronDown size={20} strokeWidth={3} />}</div>
+              </button>
+              {isQuoteOpen && (
+                <div style={{ borderTop: '1px solid #e2e8f0', padding: '24px', background: '#f8fafc' }}>
+                  <textarea readOnly className="styled-input custom-scroll" style={{ height: '140px', fontSize: '13px', backgroundColor: '#fff', cursor: 'text', marginTop: 0 }} value={quoteText} />
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
+                    <button onClick={copyToClipboard} style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', padding: '10px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '13px', fontWeight: '700', color: '#475569', cursor: 'pointer' }}><Copy size={16} /> Copia Testo</button>
+                    <button onClick={openWhatsApp} style={{ flex: 2, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', padding: '10px', background: '#25d366', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '700', color: '#fff', cursor: 'pointer' }}><MessageCircle size={16} fill="#fff" /> Invia su WhatsApp</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
             <button onClick={() => isConfigComplete && setIsSimOpen(!isSimOpen)} className="tab-btn" disabled={!isConfigComplete} style={{ opacity: isConfigComplete ? 1 : 0.6, width: '100%', padding: '20px 24px', border: 'none', background: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: isConfigComplete ? 'pointer' : 'not-allowed', textAlign: 'left' }}>
