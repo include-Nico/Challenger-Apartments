@@ -231,8 +231,9 @@ export default function App() {
   };
 
   return (
-    <div className="challenger-app-wrapper" style={{ padding: '32px', fontFamily: 'system-ui, -apple-system, sans-serif', backgroundColor: '#f8fafc', minHeight: '100vh', color: '#0f172a', position: 'relative' }}>
+    <div className="challenger-app-wrapper">
       
+      {/* 🚀 EPIC SPLASH SCREEN ANIMATION 🚀 */}
       {!splashFinished && (
         <div className={`epic-splash-overlay ${splashFading ? 'splash-fade-out' : ''}`}>
           <div className="cyber-grid"></div>
@@ -260,13 +261,110 @@ export default function App() {
         </div>
       )}
 
+      {/* STILI CSS RESPONSIVE & ANIMAZIONI */}
       <style>{`
+        /* Reset Base */
         .challenger-app-wrapper * { box-sizing: border-box !important; }
+        
+        .challenger-app-wrapper {
+          padding: 32px;
+          font-family: system-ui, -apple-system, sans-serif;
+          background-color: #f8fafc;
+          min-height: 100vh;
+          color: #0f172a;
+          position: relative;
+        }
+
+        /* STRUTTURE LAYOUT */
+        .header-layout {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 32px;
+          flex-wrap: wrap;
+          gap: 16px;
+        }
+        .header-actions {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          flex-wrap: wrap;
+        }
+        .metrics-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+          gap: 20px;
+          margin-bottom: 24px;
+        }
+        .main-grid {
+          display: grid;
+          grid-template-columns: 360px 1fr;
+          gap: 24px;
+          margin-bottom: 28px;
+        }
+        .sim-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 24px;
+          align-items: center;
+        }
+        .form-row {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+        }
+        .chart-wrapper {
+          height: 400px;
+          width: 100%;
+          margin-top: 20px;
+        }
+
+        /* MEDIA QUERIES PER SMARTPHONE */
+        @media (max-width: 768px) {
+          .challenger-app-wrapper {
+            padding: 16px;
+          }
+          .main-grid {
+            grid-template-columns: 1fr; /* Mette Configurazione sopra al Grafico */
+          }
+          .sim-grid {
+            grid-template-columns: 1fr; /* Incolonna il simulatore */
+            gap: 16px;
+          }
+          .header-layout {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+          .header-actions {
+            width: 100%;
+          }
+          .tab-btn-group {
+            width: 100%;
+            display: flex;
+          }
+          .tab-btn-group button {
+            flex: 1;
+            justify-content: center;
+          }
+          .form-row {
+            grid-template-columns: 1fr; /* I form a 2 colonne diventano a 1 colonna */
+          }
+          .chart-wrapper {
+            height: 300px; /* Grafico un po' più basso su telefono */
+          }
+          .date-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+          }
+        }
+
+        /* CSS EPIC SPLASH SCREEN */
         .epic-splash-overlay { position: fixed; inset: 0; background: radial-gradient(circle at 50% 40%, #1e3a8a 0%, #0f172a 60%, #020617 100%); z-index: 99999; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.5s; overflow: hidden; }
         .splash-fade-out { opacity: 0; visibility: hidden; pointer-events: none; }
         .cyber-grid { position: absolute; width: 200vw; height: 200vh; background-image: linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px); background-size: 40px 40px; transform: perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px); animation: gridMove 10s linear infinite; opacity: 0.4; }
         @keyframes gridMove { 0% { background-position: 0 0; } 100% { background-position: 0 40px; } }
-        .splash-stage { position: relative; width: 400px; height: 400px; display: flex; align-items: center; justify-content: center; perspective: 1000px; }
+        .splash-stage { position: relative; width: 100%; max-width: 400px; height: 400px; display: flex; align-items: center; justify-content: center; perspective: 1000px; }
         .supernova-flash { position: absolute; inset: 0; background: #ffffff; z-index: 50; opacity: 0; pointer-events: none; animation: flashBang 2.5s ease-in-out forwards; }
         @keyframes flashBang { 0%, 63% { opacity: 0; } 65% { opacity: 1; } 75% { opacity: 0; } 100% { opacity: 0; } }
         .epic-house-container { position: relative; z-index: 30; animation: houseMasterSequence 2s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
@@ -284,14 +382,15 @@ export default function App() {
         .epic-particle { position: absolute; font-size: 32px; z-index: 40; opacity: 0; pointer-events: none; transform-style: preserve-3d; animation: flyOut 1.5s cubic-bezier(0.1, 0.9, 0.2, 1) var(--delay) forwards; }
         @keyframes flyOut { 0% { opacity: 0; transform: translate(0, 0) scale(0) rotate3d(0,0,0,0deg); filter: drop-shadow(0 0 20px #fbbf24) brightness(3); } 10% { opacity: 1; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5)) brightness(1); } 100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(var(--scale)) rotateX(var(--rX)) rotateY(var(--rY)) rotateZ(var(--rZ)); } }
         .epic-title-container { position: absolute; bottom: 20px; text-align: center; width: 100%; z-index: 10; }
-        .epic-title { font-size: 28px; font-weight: 900; letter-spacing: 4px; color: transparent; background: linear-gradient(to right, #fff, #93c5fd, #fff); background-size: 200% auto; background-clip: text; -webkit-background-clip: text; animation: textShine 2s linear infinite, textEntrance 2.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; opacity: 0; transform: translateY(20px); }
-        .epic-subtitle { font-size: 13px; color: #60a5fa; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-top: 8px; opacity: 0; animation: textEntrance 2.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s forwards; }
+        .epic-title { font-size: 24px; font-weight: 900; letter-spacing: 2px; color: transparent; background: linear-gradient(to right, #fff, #93c5fd, #fff); background-size: 200% auto; background-clip: text; -webkit-background-clip: text; animation: textShine 2s linear infinite, textEntrance 2.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; opacity: 0; transform: translateY(20px); }
+        .epic-subtitle { font-size: 11px; color: #60a5fa; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-top: 8px; opacity: 0; animation: textEntrance 2.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s forwards; }
         @keyframes textShine { to { background-position: 200% center; } }
         @keyframes textEntrance { 0% { opacity: 0; transform: translateY(20px); filter: blur(10px); } 20% { opacity: 1; transform: translateY(0); filter: blur(0px); } 80% { opacity: 1; transform: translateY(0); filter: blur(0px); } 100% { opacity: 0; transform: translateY(-20px); filter: blur(10px); } }
         
-        .metric-card { transition: transform 0.2s ease, box-shadow 0.2s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+        /* ALTRI COMPONENTI UI */
+        .metric-card { background: #fff; padding: 24px; border-radius: 16px; border: 1px solid #e2e8f0; transition: transform 0.2s ease, box-shadow 0.2s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
         .metric-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04); }
-        .styled-input, select.styled-input { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; background-color: #ffffff !important; color: #0f172a !important; outline: none; font-family: inherit; font-size: 14px; margin-top: 6px; }
+        .styled-input, select.styled-input { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; background-color: #ffffff !important; color: #0f172a !important; outline: none; font-family: inherit; font-size: 14px; margin-top: 6px; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
         .styled-input:focus { border-color: #3b82f6 !important; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
         .helper-text { display: block; font-size: 11px; color: #64748b; margin-top: 5px; line-height: 1.3; font-weight: 500; }
         .tab-btn { transition: all 0.2s ease; }
@@ -299,7 +398,7 @@ export default function App() {
         .table-row { transition: background-color 0.15s ease; }
         .table-row:hover { background-color: #f8fafc !important; }
         .event-row:hover { background-color: #dbeafe !important; }
-        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 8px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
       `}</style>
@@ -311,7 +410,8 @@ export default function App() {
         </div>
       )}
 
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
+      {/* HEADER RESPONSIVE */}
+      <header className="header-layout">
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ background: 'linear-gradient(135deg, #2563eb, #1e40af)', padding: '10px', borderRadius: '12px', color: '#fff' }}>
@@ -320,11 +420,11 @@ export default function App() {
             <h1 style={{ fontSize: '26px', fontWeight: '800', letterSpacing: '-0.5px', color: '#0f172a', margin: 0 }}>Challenger Pricing</h1>
           </div>
           <p style={{ color: '#64748b', fontSize: '14px', marginTop: '6px', fontWeight: '500', margin: '6px 0 0 0' }}>
-            Algoritmo predittivo per affitti brevi su base mercato ed eventi
+            Algoritmo predittivo per affitti brevi
           </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div className="header-actions">
           <div style={{ position: 'relative' }} ref={eventsRef}>
             <button onClick={toggleEventsMenu} className="tab-btn" style={{ background: '#fff', border: '1px solid #e2e8f0', padding: '8px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', position: 'relative', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}>
               <Bell size={20} color="#475569" />
@@ -333,7 +433,7 @@ export default function App() {
               )}
             </button>
             {isEventsOpen && (
-              <div className="custom-scroll" style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', width: '320px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 100, maxHeight: '400px', overflowY: 'auto' }}>
+              <div className="custom-scroll" style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', width: '300px', maxWidth: '90vw', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 100, maxHeight: '400px', overflowY: 'auto' }}>
                 <div style={{ padding: '16px', borderBottom: '1px solid #f1f5f9', background: '#f8fafc', position: 'sticky', top: 0, zIndex: 10 }}>
                   <h3 style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Eventi nel periodo ({upcomingEvents.length})</h3>
                 </div>
@@ -359,37 +459,37 @@ export default function App() {
             )}
           </div>
 
-          <div style={{ background: '#fff', border: '1px solid #e2e8f0', padding: '8px 14px', borderRadius: '10px', fontSize: '13px', color: '#475569', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ background: '#fff', border: '1px solid #e2e8f0', padding: '8px 14px', borderRadius: '10px', fontSize: '13px', color: '#475569', display: 'flex', alignItems: 'center', gap: '8px', flex: 1, justifyContent: 'center' }}>
             <Calendar size={16} color="#2563eb" />
             <span>Oggi: <strong style={{ color: '#0f172a' }}>{getTodayISO()}</strong></span>
           </div>
 
-          <div style={{ display: 'flex', background: '#e2e8f0', padding: '4px', borderRadius: '12px' }}>
+          <div className="tab-btn-group" style={{ background: '#e2e8f0', padding: '4px', borderRadius: '12px' }}>
             <button onClick={() => setActiveTab('listing')} className={`tab-btn ${activeTab === 'listing' ? 'active-tab' : ''}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '8px', border: 'none', fontSize: '13px', fontWeight: '600', cursor: 'pointer', background: activeTab === 'listing' ? '#fff' : 'transparent', color: activeTab === 'listing' ? '#2563eb' : '#64748b', boxShadow: activeTab === 'listing' ? '0 2px 4px rgba(0,0,0,0.06)' : 'none' }}>
-              <Layers size={16} /> Imposta Listino
+              <Layers size={16} /> Listino
             </button>
             <button onClick={() => setActiveTab('quote')} className={`tab-btn ${activeTab === 'quote' ? 'active-tab' : ''}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '8px', border: 'none', fontSize: '13px', fontWeight: '600', cursor: 'pointer', background: activeTab === 'quote' ? '#fff' : 'transparent', color: activeTab === 'quote' ? '#2563eb' : '#64748b', boxShadow: activeTab === 'quote' ? '0 2px 4px rgba(0,0,0,0.06)' : 'none' }}>
-              <Calculator size={16} /> Preventivo Ospiti
+              <Calculator size={16} /> Preventivo
             </button>
           </div>
         </div>
       </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '24px' }}>
-        <div className="metric-card" style={{ background: activeTab === 'quote' ? 'linear-gradient(135deg, #2563eb, #1d4ed8)' : '#fff', color: activeTab === 'quote' ? '#fff' : '#0f172a', padding: '24px', borderRadius: '16px', border: activeTab === 'quote' ? 'none' : '1px solid #e2e8f0' }}>
+      {/* METRICHE RESPONSIVE */}
+      <div className="metrics-grid">
+        <div className="metric-card" style={{ background: activeTab === 'quote' ? 'linear-gradient(135deg, #2563eb, #1d4ed8)' : '#fff', color: activeTab === 'quote' ? '#fff' : '#0f172a', border: activeTab === 'quote' ? 'none' : '1px solid #e2e8f0' }}>
           <span style={{ fontSize: '13px', color: activeTab === 'quote' ? '#e0e7ff' : '#64748b', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
             {activeTab === 'listing' ? 'Prezzo Proposto (Oggi)' : 'Preventivo Totale'}
           </span>
           <div style={{ fontSize: '32px', fontWeight: '800', marginTop: '8px', color: activeTab === 'quote' ? '#fff' : '#2563eb' }}>
             €{activeTab === 'listing' ? (currentRec.eff_challenger || '0.00') : totalChallengerStay.toFixed(2)}
             <span style={{ fontSize: '14px', fontWeight: '500', color: activeTab === 'quote' ? '#e0e7ff' : '#64748b' }}>
-              {activeTab === 'listing' ? ' / notte (ADR)' : ` (${totalDays} notti)`}
+              {activeTab === 'listing' ? ' / notte' : ` (${totalDays} notti)`}
             </span>
           </div>
-          <p style={{ fontSize: '12px', color: activeTab === 'quote' ? '#c7d2fe' : '#94a3b8', marginTop: '6px', fontWeight: '500', margin: '6px 0 0 0' }}>Il calcolo include già i {apartment.fixedExtraFee}€ di pulizie spalmate.</p>
         </div>
 
-        <div className="metric-card" style={{ background: '#fff', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+        <div className="metric-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '13px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Quota per Persona ({apartment.guests}p)</span>
             <Users size={18} color="#2563eb" />
@@ -400,18 +500,15 @@ export default function App() {
           </div>
         </div>
 
-        <div className="metric-card" style={{ background: '#fff', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
-          <span style={{ fontSize: '13px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Mediana Mercato ({apartment.neighbourhood})</span>
+        <div className="metric-card">
+          <span style={{ fontSize: '13px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Mediana ({apartment.neighbourhood})</span>
           <div style={{ fontSize: '32px', fontWeight: '800', color: '#8b5cf6', marginTop: '8px' }}>
             €{currentMarketComp}
             <span style={{ fontSize: '14px', fontWeight: '500', color: '#64748b' }}> / notte base</span>
           </div>
-          <p style={{ fontSize: '12px', color: currentRec.market_sample_count > 0 ? '#059669' : '#d97706', marginTop: '6px', fontWeight: '600', margin: '6px 0 0 0' }}>
-            {currentRec.market_sample_count > 0 ? `✓ Analizzati ${currentRec.market_sample_count} annunci esatti` : `⚠️ Nessun annuncio locale`}
-          </p>
         </div>
 
-        <div className="metric-card" style={{ background: '#fff', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+        <div className="metric-card">
           <span style={{ fontSize: '13px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Delta vs Fisso Host</span>
           <div style={{ fontSize: '32px', fontWeight: '800', color: deltaRevenue >= 0 ? '#16a34a' : '#dc2626', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
             {deltaRevenue >= 0 ? `+€${deltaRevenue.toFixed(2)}` : `-€${Math.abs(deltaRevenue).toFixed(2)}`}
@@ -420,25 +517,24 @@ export default function App() {
         </div>
       </div>
 
+      {/* SIMULATORE OTA RESPONSIVE */}
       <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', marginBottom: '28px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
         <button onClick={() => setIsSimOpen(!isSimOpen)} className="tab-btn" style={{ width: '100%', padding: '20px 24px', border: 'none', background: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', textAlign: 'left' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{ background: '#eff6ff', padding: '8px', borderRadius: '10px' }}><Wallet size={20} color="#2563eb" /></div>
             <div>
-              <h2 style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Simulatore Payout Netto (Commissioni e OTA)</h2>
-              <p style={{ fontSize: '13px', color: '#64748b', marginTop: '4px', fontWeight: '500', margin: '4px 0 0 0' }}>Scopri esattamente quanto incassi pulito sul tuo conto corrente bancario</p>
+              <h2 style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Simulatore Payout Netto</h2>
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#2563eb' }}>
-            <span style={{ fontSize: '13px', fontWeight: '700' }}>{isSimOpen ? 'Chiudi Payout' : 'Calcola Payout'}</span>
             {isSimOpen ? <ChevronUp size={20} strokeWidth={3} /> : <ChevronDown size={20} strokeWidth={3} />}
           </div>
         </button>
         
         {isSimOpen && (
-          <div style={{ borderTop: '1px solid #e2e8f0', padding: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', alignItems: 'center', background: '#f8fafc' }}>
+          <div className="sim-grid" style={{ borderTop: '1px solid #e2e8f0', padding: '24px', background: '#f8fafc' }}>
             <div>
-              <label style={{ fontWeight: '800', fontSize: '14px', color: '#1e293b', display: 'block', marginBottom: '8px' }}>Seleziona la Piattaforma di Prenotazione</label>
+              <label style={{ fontWeight: '800', fontSize: '14px', color: '#1e293b', display: 'block', marginBottom: '8px' }}>Seleziona la Piattaforma</label>
               <select className="styled-input" style={{ fontSize: '14px', padding: '12px' }} value={otaRate} onChange={(e) => setOtaRate(Number(e.target.value))}>
                 <option value={3}>Airbnb - Trattenuta Condivisa (~3%)</option>
                 <option value={15}>Airbnb - Commissione Solo Host (~15%)</option>
@@ -452,28 +548,31 @@ export default function App() {
             </div>
 
             <div style={{ background: 'linear-gradient(135deg, #10b981, #059669)', padding: '24px', borderRadius: '16px', color: '#fff', boxShadow: '0 4px 10px rgba(16,185,129,0.3)' }}>
-              <h4 style={{ fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '700', opacity: 0.9, marginBottom: '16px' }}>Payout Netto al Proprietario</h4>
+              <h4 style={{ fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '700', opacity: 0.9, marginBottom: '16px' }}>Payout Netto</h4>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '15px' }}>
                 <span style={{ opacity: 0.9 }}>Incasso Totale Lordo</span>
                 <span style={{ fontWeight: '700' }}>€{totalChallengerStay.toFixed(2)}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', fontSize: '15px' }}>
-                <span style={{ opacity: 0.9 }}>Fattura Piattaforma OTA ({otaRate}%)</span>
+                <span style={{ opacity: 0.9 }}>Fattura Piattaforma ({otaRate}%)</span>
                 <span style={{ fontWeight: '700', color: '#fca5a5' }}>-€{challengerCommission.toFixed(2)}</span>
               </div>
               <div style={{ paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontWeight: '800', fontSize: '16px' }}>Bonifico in Entrata (Netto)</span>
-                <span style={{ fontSize: '36px', fontWeight: '800' }}>€{challengerNet.toFixed(2)}</span>
+                <span style={{ fontWeight: '800', fontSize: '16px' }}>Bonifico in Entrata</span>
+                <span style={{ fontSize: '32px', fontWeight: '800' }}>€{challengerNet.toFixed(2)}</span>
               </div>
             </div>
           </div>
         )}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '360px 1fr', gap: '24px', marginBottom: '28px' }}>
+      {/* GRIGLIA PRINCIPALE (FORM + GRAFICO) RESPONSIVE */}
+      <div className="main-grid">
+        
+        {/* Form Configurazione */}
         <div style={{ background: '#fff', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
           <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px', color: '#0f172a', margin: '0 0 20px 0' }}>
-            <Home size={18} color="#2563eb" /> Configurazione Asset
+            <Home size={18} color="#2563eb" /> Configurazione
           </h2>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -490,13 +589,15 @@ export default function App() {
               </div>
             ) : (
               <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                <div style={{ marginBottom: '12px' }}>
-                  <label style={{ fontWeight: '700', fontSize: '13px', color: '#334155' }}>Check-in</label>
-                  <input type="date" className="styled-input" value={quoteDates.startDate} onChange={(e) => setQuoteDates({ ...quoteDates, startDate: e.target.value })} />
-                </div>
-                <div>
-                  <label style={{ fontWeight: '700', fontSize: '13px', color: '#334155' }}>Check-out</label>
-                  <input type="date" className="styled-input" value={quoteDates.endDate} min={quoteDates.startDate} onChange={(e) => setQuoteDates({ ...quoteDates, endDate: e.target.value })} />
+                <div className="date-inputs">
+                  <div>
+                    <label style={{ fontWeight: '700', fontSize: '13px', color: '#334155' }}>Check-in</label>
+                    <input type="date" className="styled-input" value={quoteDates.startDate} onChange={(e) => setQuoteDates({ ...quoteDates, startDate: e.target.value })} />
+                  </div>
+                  <div>
+                    <label style={{ fontWeight: '700', fontSize: '13px', color: '#334155' }}>Check-out</label>
+                    <input type="date" className="styled-input" value={quoteDates.endDate} min={quoteDates.startDate} onChange={(e) => setQuoteDates({ ...quoteDates, endDate: e.target.value })} />
+                  </div>
                 </div>
               </div>
             )}
@@ -504,7 +605,7 @@ export default function App() {
             <div style={{ background: '#f0fdf4', padding: '14px', borderRadius: '12px', border: '1px solid #bbf7d0' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Users size={16} color="#16a34a" />
-                <label style={{ fontWeight: '700', fontSize: '13px', color: '#166534' }}>Ospiti nel Preventivo</label>
+                <label style={{ fontWeight: '700', fontSize: '13px', color: '#166534' }}>Ospiti Soggiorno</label>
               </div>
               <input type="number" className="styled-input" min={1} max={apartment.maxGuests} value={apartment.guests} onChange={(e) => handleNumChange('guests', e.target.value)} />
             </div>
@@ -527,7 +628,7 @@ export default function App() {
               )}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div className="form-row">
               <div>
                 <label style={{ fontWeight: '700', fontSize: '12px', color: '#475569' }}>Prezzo Base (€)</label>
                 <input type="number" className="styled-input" value={apartment.basePrice} onChange={(e) => handleNumChange('basePrice', e.target.value)} />
@@ -538,7 +639,7 @@ export default function App() {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div className="form-row">
               <div>
                 <label style={{ fontWeight: '700', fontSize: '12px', color: '#475569' }}>Minimo Floor (€)</label>
                 <input type="number" className="styled-input" value={apartment.floorPrice} onChange={(e) => handleNumChange('floorPrice', e.target.value)} />
@@ -557,24 +658,25 @@ export default function App() {
           </div>
         </div>
 
-        <div style={{ background: '#fff', padding: '28px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+        {/* Grafico */}
+        <div style={{ background: '#fff', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', width: '100%', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Andamento ADR Effettivo vs Mercato</h2>
+              <h2 style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Andamento vs Mercato</h2>
               <Info size={16} color="#94a3b8" />
             </div>
             <div style={{ display: 'flex', gap: '10px' }}>
-              <span style={{ fontSize: '12px', background: '#eff6ff', color: '#2563eb', padding: '4px 10px', borderRadius: '8px', fontWeight: '700' }}>Challenger</span>
-              <span style={{ fontSize: '12px', background: '#f5f3ff', color: '#7c3aed', padding: '4px 10px', borderRadius: '8px', fontWeight: '700' }}>Mediana</span>
+              <span style={{ fontSize: '11px', background: '#eff6ff', color: '#2563eb', padding: '4px 8px', borderRadius: '6px', fontWeight: '700' }}>Challenger</span>
+              <span style={{ fontSize: '11px', background: '#f5f3ff', color: '#7c3aed', padding: '4px 8px', borderRadius: '6px', fontWeight: '700' }}>Mediana</span>
             </div>
           </div>
 
-          <div style={{ height: '400px', width: '100%', marginTop: '20px' }}>
+          <div className="chart-wrapper">
             {loading ? (
-              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', color: '#94a3b8', fontWeight: '600' }}>Elaborazione dati in corso...</div>
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', color: '#94a3b8', fontWeight: '600', fontSize: '13px' }}>Elaborazione dati in corso...</div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={pricingData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                <AreaChart data={pricingData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="challengerGradient" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#2563eb" stopOpacity={0.20}/>
@@ -582,31 +684,30 @@ export default function App() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="4 4" stroke="#f1f5f9" vertical={false} />
-                  <XAxis dataKey="date" stroke="#94a3b8" tickFormatter={(d) => d ? d.slice(5) : ''} tickLine={false} tick={{ fontSize: 12, fontWeight: 500 }} dy={10} />
-                  <YAxis stroke="#94a3b8" tickLine={false} tickFormatter={(v) => `€${v}`} tick={{ fontSize: 12, fontWeight: 500 }} dx={-10} />
+                  <XAxis dataKey="date" stroke="#94a3b8" tickFormatter={(d) => d ? d.slice(5) : ''} tickLine={false} tick={{ fontSize: 11, fontWeight: 500 }} dy={10} minTickGap={20} />
+                  <YAxis stroke="#94a3b8" tickLine={false} tickFormatter={(v) => `€${v}`} tick={{ fontSize: 11, fontWeight: 500 }} dx={-10} />
                   <Tooltip 
                     cursor={{ stroke: '#cbd5e1', strokeWidth: 1, strokeDasharray: '4 4' }}
                     content={({ active, payload, label }) => {
                       if (active && payload && payload.length) {
                         const data = payload[0].payload;
                         return (
-                          <div style={{ background: '#0f172a', color: '#f8fafc', padding: '16px', borderRadius: '12px', fontSize: '13px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.2)' }}>
+                          <div style={{ background: '#0f172a', color: '#f8fafc', padding: '12px', borderRadius: '12px', fontSize: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.2)' }}>
                             <div style={{ fontWeight: '800', marginBottom: '8px', color: '#fff', borderBottom: '1px solid #334155', paddingBottom: '6px' }}>{label} ({data.day_of_week})</div>
-                            {data.active_event && <div style={{ color: '#60a5fa', marginBottom: '10px', fontWeight: '700' }}>✨ {data.active_event} ({data.multiplier}x)</div>}
-                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '24px', marginBottom: '4px' }}><span style={{ color: '#94a3b8' }}>Tariffa Pura:</span><strong style={{ fontSize: '13px', color: '#e2e8f0' }}>€{data.challenger_price}</strong></div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '24px', marginBottom: '8px' }}><span style={{ color: '#94a3b8' }}>+ Pulizie Spalmate:</span><strong style={{ fontSize: '13px', color: '#e2e8f0' }}>+€{cleaningAmortizedPerNight.toFixed(2)}</strong></div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '24px', marginBottom: '4px', paddingTop: '6px', borderTop: '1px solid #334155' }}><span style={{ color: '#fff' }}>ADR Effettivo:</span><strong style={{ fontSize: '15px', color: '#fff' }}>€{data.eff_challenger}</strong></div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '24px' }}><span style={{ color: '#94a3b8' }}>Mediana Mercato:</span><strong style={{ color: '#c084fc' }}>€{data.market_median}</strong></div>
+                            {data.active_event && <div style={{ color: '#60a5fa', marginBottom: '8px', fontWeight: '700' }}>✨ {data.active_event}</div>}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '24px', marginBottom: '4px' }}><span style={{ color: '#94a3b8' }}>Tariffa:</span><strong style={{ color: '#e2e8f0' }}>€{data.challenger_price}</strong></div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '24px', marginBottom: '4px', paddingTop: '6px', borderTop: '1px solid #334155' }}><span style={{ color: '#fff' }}>Con Pulizie:</span><strong style={{ fontSize: '14px', color: '#fff' }}>€{data.eff_challenger}</strong></div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '24px' }}><span style={{ color: '#94a3b8' }}>Mercato:</span><strong style={{ color: '#c084fc' }}>€{data.market_median}</strong></div>
                           </div>
                         );
                       }
                       return null;
                     }}
                   />
-                  <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: '13px', fontWeight: '600', color: '#475569' }} />
-                  <Area type="monotone" dataKey="eff_challenger" name="ADR Effettivo Proposto" stroke="#2563eb" strokeWidth={3} fillOpacity={1} fill="url(#challengerGradient)" dot={(props) => props.payload.active_event ? <circle key={props.cx} cx={props.cx} cy={props.cy} r={5} fill="#2563eb" stroke="#fff" strokeWidth={2} /> : <circle key={props.cx} cx={props.cx} cy={props.cy} r={0} />} activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }} />
-                  <Line type="monotone" dataKey="eff_champion" name="Fisso Host Effettivo" stroke="#94a3b8" strokeDasharray="5 5" strokeWidth={2} dot={false} />
-                  <Line type="monotone" dataKey="market_median" name="Mediana Concorrenti" stroke="#8b5cf6" strokeDasharray="3 3" strokeWidth={2} dot={false} />
+                  <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px', fontWeight: '600', color: '#475569' }} />
+                  <Area type="monotone" dataKey="eff_challenger" name="ADR Proposto" stroke="#2563eb" strokeWidth={3} fillOpacity={1} fill="url(#challengerGradient)" dot={(props) => props.payload.active_event ? <circle key={props.cx} cx={props.cx} cy={props.cy} r={4} fill="#2563eb" stroke="#fff" strokeWidth={2} /> : <circle key={props.cx} cx={props.cx} cy={props.cy} r={0} />} activeDot={{ r: 5, stroke: '#fff', strokeWidth: 2 }} />
+                  <Line type="monotone" dataKey="eff_champion" name="Fisso Host" stroke="#94a3b8" strokeDasharray="5 5" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="market_median" name="Mediana NIL" stroke="#8b5cf6" strokeDasharray="3 3" strokeWidth={2} dot={false} />
                 </AreaChart>
               </ResponsiveContainer>
             )}
@@ -614,32 +715,30 @@ export default function App() {
         </div>
       </div>
 
+      {/* Tabella Analitica con scroll orizzontale su mobile */}
       <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-        <button onClick={() => setIsTableOpen(!isTableOpen)} className="tab-btn" style={{ width: '100%', padding: '20px 28px', border: 'none', background: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', textAlign: 'left' }}>
+        <button onClick={() => setIsTableOpen(!isTableOpen)} className="tab-btn" style={{ width: '100%', padding: '20px 24px', border: 'none', background: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', textAlign: 'left' }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <h2 style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Breakdown Analitico (Notte per Notte)</h2>
-            </div>
+            <h2 style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Analisi Notte per Notte</h2>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#2563eb', background: '#eff6ff', padding: '8px 12px', borderRadius: '10px' }}>
-            <span style={{ fontSize: '13px', fontWeight: '700' }}>{isTableOpen ? 'Chiudi' : 'Apri'}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#2563eb', background: '#eff6ff', padding: '6px 10px', borderRadius: '10px' }}>
             {isTableOpen ? <ChevronUp size={18} strokeWidth={3} /> : <ChevronDown size={18} strokeWidth={3} />}
           </div>
         </button>
         
         {isTableOpen && (
-          <div className="custom-scroll" style={{ borderTop: '1px solid #e2e8f0', overflowX: 'auto', maxHeight: '500px' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
+          <div className="custom-scroll" style={{ borderTop: '1px solid #e2e8f0', overflowX: 'auto', maxHeight: '500px', WebkitOverflowScrolling: 'touch' }}>
+            <table style={{ width: '100%', minWidth: '700px', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
               <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
                 <tr style={{ background: '#f8fafc', color: '#475569', borderBottom: '2px solid #e2e8f0' }}>
-                  <th style={{ padding: '14px 28px', fontWeight: '700' }}>Data</th>
+                  <th style={{ padding: '14px 20px', fontWeight: '700' }}>Data</th>
                   <th style={{ padding: '14px 16px', fontWeight: '700' }}>Driver Evento</th>
                   <th style={{ padding: '14px 16px', fontWeight: '700' }}>Molt.</th>
                   <th style={{ padding: '14px 16px', fontWeight: '700' }}>Mediana</th>
                   <th style={{ padding: '14px 16px', fontWeight: '700' }}>Tariffa Pura</th>
-                  <th style={{ padding: '14px 16px', fontWeight: '700', color: '#1e40af' }}>Tariffa Effettiva</th>
+                  <th style={{ padding: '14px 16px', fontWeight: '700', color: '#1e40af' }}>Effettiva</th>
                   <th style={{ padding: '14px 16px', fontWeight: '700' }}>Quota {apartment.guests}p</th>
-                  <th style={{ padding: '14px 28px', fontWeight: '700' }}>Delta vs Fisso</th>
+                  <th style={{ padding: '14px 20px', fontWeight: '700' }}>vs Fisso</th>
                 </tr>
               </thead>
               <tbody>
@@ -647,14 +746,14 @@ export default function App() {
                   const hasEvent = Boolean(row.active_event);
                   return (
                     <tr className={`table-row ${hasEvent ? 'event-row' : ''}`} key={row.date} style={{ borderBottom: '1px solid #f1f5f9', backgroundColor: hasEvent ? 'rgba(239, 246, 255, 0.4)' : 'transparent' }}>
-                      <td style={{ padding: '14px 28px', fontWeight: '700', color: '#1e293b' }}>{row.date} <span style={{ color: '#94a3b8', fontWeight: '500' }}>({row.day_of_week})</span></td>
-                      <td style={{ padding: '14px 16px' }}>{hasEvent ? <span style={{ background: '#dbeafe', color: '#1e40af', padding: '4px 10px', borderRadius: '8px', fontWeight: '700', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Sparkles size={14} /> {row.active_event}</span> : <span style={{ color: '#94a3b8', fontWeight: '500' }}>Standard</span>}</td>
+                      <td style={{ padding: '14px 20px', fontWeight: '700', color: '#1e293b' }}>{row.date.slice(5)} <span style={{ color: '#94a3b8', fontWeight: '500', fontSize: '11px' }}>({row.day_of_week.slice(0,3)})</span></td>
+                      <td style={{ padding: '14px 16px' }}>{hasEvent ? <span style={{ background: '#dbeafe', color: '#1e40af', padding: '4px 8px', borderRadius: '6px', fontWeight: '700', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}><Sparkles size={12} /> {row.active_event}</span> : <span style={{ color: '#94a3b8', fontWeight: '500' }}>-</span>}</td>
                       <td style={{ padding: '14px 16px', fontWeight: '700', color: hasEvent ? '#2563eb' : '#64748b' }}>{row.multiplier}x</td>
                       <td style={{ padding: '14px 16px', color: '#8b5cf6', fontWeight: '700' }}>€{row.market_median}</td>
                       <td style={{ padding: '14px 16px', color: '#64748b', fontWeight: '500' }}>€{row.challenger_price}</td>
                       <td style={{ padding: '14px 16px', fontWeight: '800', color: '#2563eb', fontSize: '14px' }}>€{row.eff_challenger}</td>
                       <td style={{ padding: '14px 16px', color: '#059669', fontWeight: '700' }}>€{row.eff_price_per_person}</td>
-                      <td style={{ padding: '14px 28px', fontWeight: '800', color: row.delta >= 0 ? '#16a34a' : '#dc2626' }}>{row.delta >= 0 ? `+€${row.delta}` : `€${row.delta}`}</td>
+                      <td style={{ padding: '14px 20px', fontWeight: '800', color: row.delta >= 0 ? '#16a34a' : '#dc2626' }}>{row.delta >= 0 ? `+€${row.delta}` : `€${row.delta}`}</td>
                     </tr>
                   );
                 })}
