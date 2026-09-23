@@ -656,7 +656,7 @@ export default function App() {
           {!isConfigComplete && (
             <div className="lock-overlay" style={{ background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(4px)' }}>
               <Lock size={48} color="#94a3b8" style={{ marginBottom: '16px' }} />
-              <p style={{ fontWeight: '700', color: '#475569', fontSize: '15px' }}>Completa i campi a sinistra per sbloccare il grafico</p>
+              <p style={{ fontWeight: '700', color: '#475569', fontSize: '15px' }}>Completa i campi sbloccare il grafico</p>
             </div>
           )}
 
