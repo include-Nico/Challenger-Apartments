@@ -15,8 +15,8 @@ export default defineConfig({
         name: 'ChallengerHouse',
         short_name: 'Challenger',
         description: 'Algoritmo predittivo per affitti brevi',
-        theme_color: '#1e40af', 
-        background_color: '#f8fafc',
+        theme_color: '#0f172a', // Barra di stato scura ed elegante
+        background_color: '#020617', // Sfondo identico all'animazione iniziale
         display: 'standalone', 
         icons: [
           {
