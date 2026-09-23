@@ -303,12 +303,15 @@ export default function App() {
           <div className="cyber-grid"></div><div className="supernova-flash"></div>
           <div className="splash-stage">
             <div className="shockwave sw-1"></div><div className="shockwave sw-2"></div><div className="shockwave sw-3"></div>
+            
+            {/* L'ICONA PWA NELLO SPLASH SCREEN */}
             <div className="epic-house-container">
               <div className="epic-house-glow"></div>
               <div className="epic-house-core">
                 <img src="/casa_soldi_icon.png" alt="Logo Challenger" style={{ width: '80%', height: '80%', objectFit: 'contain', borderRadius: '12px' }} />
               </div>
             </div>
+
             {explosionParticles.map((p, i) => (<div key={i} className="epic-particle" style={{ '--tx': p.tx, '--ty': p.ty, '--rX': p.rX, '--rY': p.rY, '--rZ': p.rZ, '--delay': p.delay, '--scale': p.scale }}>{p.symbol}</div>))}
             <div className="epic-title-container"><div className="epic-title">CHALLENGERHOUSE</div><div className="epic-subtitle">Inizializzazione Algoritmo...</div></div>
           </div>
@@ -333,8 +336,9 @@ export default function App() {
 
       <header className="header-layout">
         <div>
+          {/* L'ICONA PERSONALIZZATA AL POSTO DELLA CASETTA ACCANTO AL TITOLO */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ background: 'linear-gradient(135deg, #2563eb, #1e40af)', padding: '10px', borderRadius: '12px', color: '#fff' }}><Home size={24} /></div>
+            <img src="/casa_soldi_icon.png" alt="ChallengerHouse Logo" style={{ width: '44px', height: '44px', borderRadius: '12px', objectFit: 'cover', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }} />
             <h1 style={{ fontSize: '26px', fontWeight: '800', letterSpacing: '-0.5px', color: '#0f172a', margin: 0 }}>ChallengerHouse</h1>
           </div>
           <p style={{ color: '#64748b', fontSize: '14px', marginTop: '6px', fontWeight: '500', margin: '6px 0 0 0' }}>Algoritmo predittivo per affitti brevi</p>
@@ -361,6 +365,7 @@ export default function App() {
                 </div>
               )}
             </div>
+
             <button onClick={() => { setIsAuthenticated(false); setPinInput(''); }} style={{ background: '#fef2f2', border: '1px solid #fecaca', padding: '8px', borderRadius: '10px', cursor: 'pointer', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Blocca App">
               <Unlock size={20} />
             </button>
