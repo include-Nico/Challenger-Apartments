@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   AreaChart, Area, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, 
   CartesianGrid, Legend 
@@ -27,16 +27,47 @@ export default function App() {
   const [splashFinished, setSplashFinished] = useState(false);
   const [splashFading, setSplashFading] = useState(false);
 
+  // Motore Fisico delle Particelle per l'Esplosione (Generato una sola volta)
+  const explosionParticles = useMemo(() => {
+    return Array.from({ length: 36 }).map((_, i) => {
+      // Distribuzione circolare uniforme + variazione casuale
+      const angle = (i * (360 / 36)) + (Math.random() * 15 - 7.5);
+      // Forza dell'esplosione variabile
+      const velocity = 150 + Math.random() * 300;
+      
+      // Calcolo coordinate di destinazione vettoriali
+      const tx = Math.cos(angle * Math.PI / 180) * velocity;
+      const ty = Math.sin(angle * Math.PI / 180) * velocity;
+      
+      // Rotazione 3D spinta per realismo
+      const rX = Math.random() * 1440 - 720;
+      const rY = Math.random() * 1440 - 720;
+      const rZ = Math.random() * 1440 - 720;
+      
+      const delay = 1.6 + (Math.random() * 0.15); // Timing perfetto sull'esplosione
+      const scale = 0.8 + Math.random() * 1.5;
+      
+      const emojis = ['💶', '💰', '💸', '🪙', '✨', '💎', '💳'];
+      const symbol = emojis[Math.floor(Math.random() * emojis.length)];
+      
+      return { 
+        tx: `${tx}px`, ty: `${ty}px`, 
+        rX: `${rX}deg`, rY: `${rY}deg`, rZ: `${rZ}deg`, 
+        delay: `${delay}s`, scale, symbol 
+      };
+    });
+  }, []);
+
   useEffect(() => {
-    // Avvia la dissolvenza dopo l'esplosione
+    // Inizia la dissolvenza finale
     const fadeTimer = setTimeout(() => {
       setSplashFading(true);
-    }, 2400);
+    }, 2800);
 
-    // Rimuove completamente lo splash screen dal DOM
+    // Smonta definitivamente il componente per liberare memoria
     const finishTimer = setTimeout(() => {
       setSplashFinished(true);
-    }, 2900);
+    }, 3300);
 
     return () => {
       clearTimeout(fadeTimer);
@@ -243,44 +274,50 @@ export default function App() {
   return (
     <div className="challenger-app-wrapper" style={{ padding: '32px', fontFamily: 'system-ui, -apple-system, sans-serif', backgroundColor: '#f8fafc', minHeight: '100vh', color: '#0f172a', position: 'relative' }}>
       
-      {/* ANIMAZIONE SPLASH SCREEN ALL'ENTRATA */}
+      {/* 🚀 EPIC SPLASH SCREEN ANIMATION 🚀 */}
       {!splashFinished && (
-        <div className={`splash-overlay ${splashFading ? 'splash-fade' : ''}`}>
+        <div className={`epic-splash-overlay ${splashFading ? 'splash-fade-out' : ''}`}>
+          
+          {/* Griglia animata di sfondo */}
+          <div className="cyber-grid"></div>
+          
+          {/* Effetto lampo accecante al momento dell'esplosione */}
+          <div className="supernova-flash"></div>
+
           <div className="splash-stage">
             
-            {/* Onde d'urto dell'esplosione */}
-            <div className="blast-ring"></div>
-            <div className="blast-ring delay-ring"></div>
+            {/* Onde d'urto vettoriali (Shockwaves) */}
+            <div className="shockwave sw-1"></div>
+            <div className="shockwave sw-2"></div>
+            <div className="shockwave sw-3"></div>
 
-            {/* Casa stilizzata che pulsa ed esplode */}
-            <div className="exploding-house">
-              <div className="house-badge">
-                <Home size={76} strokeWidth={2.2} color="#ffffff" />
+            {/* Casa Olografica */}
+            <div className="epic-house-container">
+              <div className="epic-house-glow"></div>
+              <div className="epic-house-core">
+                <Home size={84} strokeWidth={2} color="#ffffff" className="house-svg" />
               </div>
             </div>
 
-            {/* Soldi che schizzano fuori dall'esplosione */}
-            <span className="cash-particle p1">💶</span>
-            <span className="cash-particle p2">€</span>
-            <span className="cash-particle p3">💰</span>
-            <span className="cash-particle p4">💸</span>
-            <span className="cash-particle p5">€</span>
-            <span className="cash-particle p6">💶</span>
-            <span className="cash-particle p7">💸</span>
-            <span className="cash-particle p8">💰</span>
-            <span className="cash-particle p9">€</span>
-            <span className="cash-particle p10">💶</span>
-            <span className="cash-particle p11">💸</span>
-            <span className="cash-particle p12">€</span>
+            {/* Generatore Particelle Monetarie 3D */}
+            {explosionParticles.map((p, index) => (
+              <div 
+                key={index} 
+                className="epic-particle" 
+                style={{
+                  '--tx': p.tx, '--ty': p.ty,
+                  '--rX': p.rX, '--rY': p.rY, '--rZ': p.rZ,
+                  '--delay': p.delay, '--scale': p.scale
+                }}
+              >
+                {p.symbol}
+              </div>
+            ))}
 
-            {/* Testo introduttivo */}
-            <div className="splash-copy">
-              <h2 style={{ fontSize: '24px', fontWeight: '800', letterSpacing: '-0.5px', margin: '0 0 6px 0', color: '#ffffff' }}>
-                Challenger Pricing
-              </h2>
-              <p style={{ fontSize: '13px', color: '#93c5fd', margin: 0, fontWeight: '500' }}>
-                Caricamento dati di mercato ed eventi in corso...
-              </p>
+            {/* Tipografia Cinematografica */}
+            <div className="epic-title-container">
+              <div className="epic-title">CHALLENGER PRICING</div>
+              <div className="epic-subtitle">Inizializzazione Algoritmo...</div>
             </div>
 
           </div>
@@ -291,162 +328,227 @@ export default function App() {
       <style>{`
         .challenger-app-wrapper * { box-sizing: border-box !important; }
         
-        /* Contenitore Splash Screen a tutto schermo */
-        .splash-overlay {
+        /* ----------------------------------------------------
+           CSS EPIC SPLASH SCREEN 
+           ---------------------------------------------------- */
+        .epic-splash-overlay {
           position: fixed;
-          top: 0;
-          left: 0;
-          width: 100vw;
-          height: 100vh;
-          background: radial-gradient(circle at center, #1d4ed8 0%, #1e40af 60%, #0f172a 100%);
+          inset: 0;
+          background: radial-gradient(circle at 50% 40%, #1e3a8a 0%, #0f172a 60%, #020617 100%);
           z-index: 99999;
           display: flex;
           align-items: center;
           justify-content: center;
-          transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+          transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.5s;
+          overflow: hidden;
         }
-        .splash-fade {
+        .splash-fade-out {
           opacity: 0;
           visibility: hidden;
           pointer-events: none;
         }
 
+        .cyber-grid {
+          position: absolute;
+          width: 200vw;
+          height: 200vh;
+          background-image: 
+            linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px);
+          background-size: 40px 40px;
+          transform: perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px);
+          animation: gridMove 10s linear infinite;
+          opacity: 0.4;
+        }
+        @keyframes gridMove {
+          0% { background-position: 0 0; }
+          100% { background-position: 0 40px; }
+        }
+
         .splash-stage {
           position: relative;
-          width: 320px;
-          height: 320px;
+          width: 400px;
+          height: 400px;
           display: flex;
           align-items: center;
           justify-content: center;
+          perspective: 1000px;
         }
 
-        /* Casa Stilizzata & Animazione Esplosione */
-        .exploding-house {
-          position: relative;
-          z-index: 20;
-          animation: houseBuildup 1.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-        }
-        .house-badge {
-          background: rgba(255, 255, 255, 0.12);
-          border: 2px solid rgba(255, 255, 255, 0.4);
-          padding: 24px;
-          border-radius: 28px;
-          backdrop-filter: blur(12px);
-          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.2);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        @keyframes houseBuildup {
-          0% {
-            transform: scale(0.3);
-            opacity: 0;
-          }
-          40% {
-            transform: scale(1.08);
-            opacity: 1;
-          }
-          70% {
-            transform: scale(0.96) rotate(-2deg);
-          }
-          85% {
-            transform: scale(1.22) rotate(3deg);
-            filter: brightness(2);
-          }
-          96% {
-            transform: scale(1.4);
-            filter: brightness(4);
-            opacity: 1;
-          }
-          100% {
-            transform: scale(0);
-            opacity: 0;
-          }
-        }
-
-        /* Onda d'urto radiale */
-        .blast-ring {
+        /* Il Lampo di Luce (Supernova) */
+        .supernova-flash {
           position: absolute;
-          width: 80px;
-          height: 80px;
-          border-radius: 50%;
-          border: 3px solid rgba(255, 255, 255, 0.9);
+          inset: 0;
+          background: #ffffff;
+          z-index: 50;
           opacity: 0;
           pointer-events: none;
-          z-index: 15;
-          animation: ringExpand 1.1s cubic-bezier(0.1, 0.8, 0.3, 1) 1.25s forwards;
+          animation: flashBang 2.5s ease-in-out forwards;
         }
-        .delay-ring {
-          border-color: #60a5fa;
-          animation-delay: 1.35s;
-        }
-
-        @keyframes ringExpand {
-          0% {
-            transform: scale(0.5);
-            opacity: 0.9;
-          }
-          100% {
-            transform: scale(4.8);
-            opacity: 0;
-          }
-        }
-
-        /* Soldi che esplodono in tutte le direzioni */
-        .cash-particle {
-          position: absolute;
-          font-size: 26px;
-          font-weight: 800;
-          color: #fbbf24;
-          text-shadow: 0 4px 10px rgba(0,0,0,0.4);
-          opacity: 0;
-          z-index: 25;
-          pointer-events: none;
-        }
-
-        .p1  { animation: burstP1  1s ease-out 1.28s forwards; }
-        .p2  { animation: burstP2  1s ease-out 1.30s forwards; }
-        .p3  { animation: burstP3  1.1s ease-out 1.26s forwards; }
-        .p4  { animation: burstP4  1s ease-out 1.32s forwards; }
-        .p5  { animation: burstP5  1.1s ease-out 1.27s forwards; }
-        .p6  { animation: burstP6  1s ease-out 1.31s forwards; }
-        .p7  { animation: burstP7  1.1s ease-out 1.29s forwards; }
-        .p8  { animation: burstP8  1s ease-out 1.28s forwards; }
-        .p9  { animation: burstP9  1s ease-out 1.33s forwards; }
-        .p10 { animation: burstP10 1.1s ease-out 1.30s forwards; }
-        .p11 { animation: burstP11 1s ease-out 1.26s forwards; }
-        .p12 { animation: burstP12 1.1s ease-out 1.29s forwards; }
-
-        @keyframes burstP1  { 0% { transform: translate(0, 0) scale(0.5); opacity: 1; } 100% { transform: translate(0px, -150px) rotate(45deg) scale(1.4); opacity: 0; } }
-        @keyframes burstP2  { 0% { transform: translate(0, 0) scale(0.5); opacity: 1; } 100% { transform: translate(110px, -120px) rotate(-30deg) scale(1.6); opacity: 0; } }
-        @keyframes burstP3  { 0% { transform: translate(0, 0) scale(0.5); opacity: 1; } 100% { transform: translate(160px, -30px) rotate(60deg) scale(1.5); opacity: 0; } }
-        @keyframes burstP4  { 0% { transform: translate(0, 0) scale(0.5); opacity: 1; } 100% { transform: translate(140px, 90px) rotate(20deg) scale(1.3); opacity: 0; } }
-        @keyframes burstP5  { 0% { transform: translate(0, 0) scale(0.5); opacity: 1; } 100% { transform: translate(40px, 150px) rotate(-50deg) scale(1.7); opacity: 0; } }
-        @keyframes burstP6  { 0% { transform: translate(0, 0) scale(0.5); opacity: 1; } 100% { transform: translate(-60px, 150px) rotate(80deg) scale(1.4); opacity: 0; } }
-        @keyframes burstP7  { 0% { transform: translate(0, 0) scale(0.5); opacity: 1; } 100% { transform: translate(-140px, 80px) rotate(-40deg) scale(1.5); opacity: 0; } }
-        @keyframes burstP8  { 0% { transform: translate(0, 0) scale(0.5); opacity: 1; } 100% { transform: translate(-160px, -20px) rotate(70deg) scale(1.6); opacity: 0; } }
-        @keyframes burstP9  { 0% { transform: translate(0, 0) scale(0.5); opacity: 1; } 100% { transform: translate(-110px, -120px) rotate(-65deg) scale(1.3); opacity: 0; } }
-        @keyframes burstP10 { 0% { transform: translate(0, 0) scale(0.5); opacity: 1; } 100% { transform: translate(-40px, -160px) rotate(35deg) scale(1.7); opacity: 0; } }
-        @keyframes burstP11 { 0% { transform: translate(0, 0) scale(0.5); opacity: 1; } 100% { transform: translate(70px, -140px) rotate(-75deg) scale(1.2); opacity: 0; } }
-        @keyframes burstP12 { 0% { transform: translate(0, 0) scale(0.5); opacity: 1; } 100% { transform: translate(-80px, 110px) rotate(45deg) scale(1.5); opacity: 0; } }
-
-        .splash-copy {
-          position: absolute;
-          bottom: -40px;
-          text-align: center;
-          width: 100%;
-          animation: textFade 2s ease forwards;
-        }
-
-        @keyframes textFade {
-          0% { opacity: 0; transform: translateY(10px); }
-          30% { opacity: 1; transform: translateY(0); }
-          85% { opacity: 1; }
+        @keyframes flashBang {
+          0%, 63% { opacity: 0; }
+          65% { opacity: 1; }
+          75% { opacity: 0; }
           100% { opacity: 0; }
         }
 
-        /* Stili Dashboard Applicazione */
+        /* Animazione Complessa della Casa */
+        .epic-house-container {
+          position: relative;
+          z-index: 30;
+          animation: houseMasterSequence 2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+
+        .epic-house-core {
+          position: relative;
+          width: 110px;
+          height: 110px;
+          background: rgba(255, 255, 255, 0.05);
+          border: 2px solid rgba(147, 197, 253, 0.3);
+          border-radius: 30px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          backdrop-filter: blur(16px);
+          box-shadow: inset 0 0 20px rgba(255,255,255,0.1), 0 15px 35px rgba(0,0,0,0.4);
+          overflow: hidden;
+        }
+        
+        .epic-house-glow {
+          position: absolute;
+          inset: -20px;
+          background: radial-gradient(circle at center, #60a5fa 0%, transparent 70%);
+          opacity: 0;
+          filter: blur(20px);
+          z-index: -1;
+          animation: houseAura 1.6s ease-in forwards;
+        }
+
+        .house-svg {
+          filter: drop-shadow(0 0 10px rgba(255,255,255,0.8));
+          animation: svgPulse 1.6s ease-in forwards;
+        }
+
+        /* Sequenza temporale della casa: Entrata -> Carica -> Esplosione */
+        @keyframes houseMasterSequence {
+          0% { transform: scale(0.4) translateY(60px); opacity: 0; }
+          20% { transform: scale(1) translateY(0); opacity: 1; } /* Entrata fluida */
+          50% { transform: scale(1.05) translateY(-10px); } /* Lievitazione */
+          55% { transform: scale(1.05) translateY(-10px) translateX(-4px) rotate(-3deg); } /* Inizio vibrazione */
+          58% { transform: scale(1.05) translateY(-10px) translateX(4px) rotate(3deg); }
+          61% { transform: scale(1.05) translateY(-10px) translateX(-4px) rotate(-3deg); }
+          63% { transform: scale(1.05) translateY(-10px) translateX(4px) rotate(3deg); }
+          64% { transform: scale(0.85); opacity: 1; } /* Implosione prima dello scoppio */
+          65% { transform: scale(4); opacity: 0; } /* SCOPPIO */
+          100% { transform: scale(4); opacity: 0; }
+        }
+
+        @keyframes houseAura {
+          0%, 30% { opacity: 0; }
+          60% { opacity: 0.8; transform: scale(1.5); }
+          64% { opacity: 1; transform: scale(2); background: radial-gradient(circle at center, #ffffff 0%, transparent 70%); }
+          65%, 100% { opacity: 0; }
+        }
+
+        @keyframes svgPulse {
+          0%, 40% { filter: drop-shadow(0 0 5px rgba(255,255,255,0.4)); }
+          64% { filter: drop-shadow(0 0 30px #ffffff) brightness(2); }
+        }
+
+        /* Shockwaves (Onde d'urto) */
+        .shockwave {
+          position: absolute;
+          border-radius: 50%;
+          border: 2px solid rgba(255, 255, 255, 0.9);
+          box-shadow: 0 0 30px #60a5fa, inset 0 0 30px #60a5fa;
+          opacity: 0;
+          pointer-events: none;
+          z-index: 20;
+          transform-origin: center;
+        }
+        .sw-1 { animation: wave 1.2s cubic-bezier(0.1, 0.8, 0.3, 1) 1.29s forwards; }
+        .sw-2 { border-width: 6px; border-color: #93c5fd; box-shadow: none; filter: blur(4px); animation: wave 1.2s cubic-bezier(0.1, 0.8, 0.3, 1) 1.33s forwards; }
+        .sw-3 { border-width: 1px; border-color: #ffffff; animation: wave 1.5s cubic-bezier(0.1, 0.8, 0.2, 1) 1.38s forwards; }
+
+        @keyframes wave {
+          0% { width: 50px; height: 50px; opacity: 1; }
+          100% { width: 800px; height: 800px; opacity: 0; border-width: 0; }
+        }
+
+        /* Motore Particellare 3D */
+        .epic-particle {
+          position: absolute;
+          font-size: 32px;
+          z-index: 40;
+          opacity: 0;
+          pointer-events: none;
+          transform-style: preserve-3d;
+          /* Utilizza le variabili CSS iniettate da React per la matematica vettoriale */
+          animation: flyOut 1.5s cubic-bezier(0.1, 0.9, 0.2, 1) var(--delay) forwards;
+        }
+
+        @keyframes flyOut {
+          0% {
+            opacity: 0;
+            transform: translate(0, 0) scale(0) rotate3d(0,0,0,0deg);
+            filter: drop-shadow(0 0 20px #fbbf24) brightness(3);
+          }
+          10% {
+            opacity: 1;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5)) brightness(1);
+          }
+          100% {
+            opacity: 0;
+            /* La particella ruota sui 3 assi creando un vero effetto 3D mentre si sposta */
+            transform: translate(var(--tx), var(--ty)) scale(var(--scale)) rotateX(var(--rX)) rotateY(var(--rY)) rotateZ(var(--rZ));
+          }
+        }
+
+        /* Tipografia Elegante */
+        .epic-title-container {
+          position: absolute;
+          bottom: 20px;
+          text-align: center;
+          width: 100%;
+          z-index: 10;
+        }
+        .epic-title {
+          font-size: 28px;
+          font-weight: 900;
+          letter-spacing: 4px;
+          color: transparent;
+          background: linear-gradient(to right, #fff, #93c5fd, #fff);
+          background-size: 200% auto;
+          background-clip: text;
+          -webkit-background-clip: text;
+          animation: textShine 2s linear infinite, textEntrance 2.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        .epic-subtitle {
+          font-size: 13px;
+          color: #60a5fa;
+          font-weight: 600;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          margin-top: 8px;
+          opacity: 0;
+          animation: textEntrance 2.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s forwards;
+        }
+
+        @keyframes textShine {
+          to { background-position: 200% center; }
+        }
+        @keyframes textEntrance {
+          0% { opacity: 0; transform: translateY(20px); filter: blur(10px); }
+          20% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+          80% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+          100% { opacity: 0; transform: translateY(-20px); filter: blur(10px); }
+        }
+
+        /* ----------------------------------------------------
+           CSS NORMALE DELLA DASHBOARD
+           ---------------------------------------------------- */
         .metric-card { transition: transform 0.2s ease, box-shadow 0.2s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
         .metric-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04); }
         .styled-input, select.styled-input {
@@ -876,23 +978,28 @@ export default function App() {
                     <tr className={`table-row ${hasEvent ? 'event-row' : ''}`} key={row.date} style={{ borderBottom: '1px solid #f1f5f9', backgroundColor: hasEvent ? 'rgba(239, 246, 255, 0.4)' : 'transparent' }}>
                       <td style={{ padding: '14px 28px', fontWeight: '700', color: '#1e293b' }}>{row.date} <span style={{ color: '#94a3b8', fontWeight: '500' }}>({row.day_of_week})</span></td>
                       <td style={{ padding: '14px 16px' }}>
-                        {hasEvent ? <span style={{ background: '#dbeafe', color: '#1e40af', padding: '4px 10px', borderRadius: '8px', fontWeight: '700', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Sparkles size={14} /> {row.active_event}</span> : <span style={{ color: '#94a3b8', fontWeight: '500' }}>Standard</span>}
-                      </td>
-                      <td style={{ padding: '14px 16px', fontWeight: '700', color: hasEvent ? '#2563eb' : '#64748b' }}>{row.multiplier}x</td>
-                      <td style={{ padding: '14px 16px', color: '#8b5cf6', fontWeight: '700' }}>€{row.market_median}</td>
-                      <td style={{ padding: '14px 16px', color: '#64748b', fontWeight: '500' }}>€{row.challenger_price}</td>
-                      <td style={{ padding: '14px 16px', fontWeight: '800', color: '#2563eb', fontSize: '14px' }}>€{row.eff_challenger}</td>
-                      <td style={{ padding: '14px 16px', color: '#059669', fontWeight: '700' }}>€{row.eff_price_per_person}</td>
-                      <td style={{ padding: '14px 28px', fontWeight: '800', color: row.delta >= 0 ? '#16a34a' : '#dc2626' }}>{row.delta >= 0 ? `+€${row.delta}` : `€${row.delta}`}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                        {hasEvent ? <span style={{ background: '#dbeafe', color: '#1e40af', padding: '4px 10px', borderRadius: '8px', fontWeight: '700', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Sparkles size={14} /> {row.active_event}</span> : <span style={{ color: '#94a3b8', fontWeight: '500' }}>Standard</span>}Per poterti dare il codice esatto e centrare l'obiettivo, ho bisogno di vedere la tua animazione attuale e sapere a quale elemento vuoi applicarla (es. un titolo, un contenitore, una modale).
 
-    </div>
-  );
+Nel frattempo, assumendo che tu stia lavorando con CSS per un'interfaccia web, ecco una base per un'animazione d'entrata estremamente moderna. Invece del classico e noioso "fade-in", questa combinazione unisce opacità, scala, traslazione e una sfocatura iniziale. Sfrutta una curva di Bézier personalizzata per dare uno slancio iniziale scattante e un atterraggio morbidissimo e "premium".
+
+```css
+.animazione-ingresso {
+  opacity: 0;
+  transform: translateY(30px) scale(0.95);
+  filter: blur(8px);
+  /* Il cubic-bezier crea un effetto dinamico ma pulito */
+  animation: entrataSpettacolare 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes entrataSpettacolare {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+    filter: blur(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
 }
