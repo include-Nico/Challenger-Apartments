@@ -49,3 +49,20 @@ def get_pricing_recommendation(
         daily_extra_fee=daily_extra_fee,
         num_guests=guests
     )
+
+    from pydantic import BaseModel
+from fastapi import HTTPException
+
+# 1. Definiamo il modello per ricevere il PIN
+class AuthRequest(BaseModel):
+    pin: str
+
+# 2. QUESTO È IL TUO PIN SEGRETO INVIOLABILE (Cambiabile a piacimento)
+SECRET_PIN = "1234"
+
+# 3. La nuova rotta di sicurezza
+@app.post("/api/auth")
+def verify_pin(request: AuthRequest):
+    if request.pin == SECRET_PIN:
+        return {"status": "ok", "message": "Accesso consentito"}
+    raise HTTPException(status_code=401, detail="PIN errato")
