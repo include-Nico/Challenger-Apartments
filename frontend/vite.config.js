@@ -11,19 +11,19 @@ export default defineConfig({
         name: 'ChallengerHouse',
         short_name: 'Challenger',
         description: 'Algoritmo predittivo per affitti brevi',
-        theme_color: '#1e40af', /* Il blu del tuo header */
+        theme_color: '#1e40af', 
         background_color: '#f8fafc',
-        display: 'standalone', /* Questo fa sparire la barra degli indirizzi di Safari/Chrome! */
+        display: 'standalone', 
         icons: [
           {
-            src: 'icon-192.png',
+            src: 'casa_soldi_icon.jpg',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/jpeg'
           },
           {
-            src: 'icon-512.png',
+            src: 'casa_soldi_icon.jpg',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/jpeg'
           }
         ]
       }
