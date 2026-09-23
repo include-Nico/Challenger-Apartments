@@ -25,8 +25,11 @@ export default function App() {
   // SISTEMA DI SICUREZZA COLLEGATO AL BACKEND
   const [isAuthenticated, setIsAuthenticated] = useState(() => loadSavedState('challenger_auth', false));
   const [pinInput, setPinInput] = useState('');
+  const [loginError, setLoginError] = useState(''); // STATO PER LA NOTIFICA CUSTOM
 
   const handleLogin = async () => {
+    setLoginError(''); // Pulisce l'errore precedente
+    
     try {
       const res = await fetch(`${API_BASE_URL}/api/auth`, {
         method: 'POST',
@@ -37,11 +40,12 @@ export default function App() {
       if (res.ok) {
         setIsAuthenticated(true);
       } else {
-        alert("PIN errato. Accesso negato.");
+        setLoginError("PIN errato. Riprova.");
         setPinInput('');
       }
     } catch (err) {
-      alert("Errore di connessione. Assicurati che il backend su Render sia online.");
+      setLoginError("Server in avvio. Riprova tra 10 sec...");
+      setPinInput('');
     }
   };
 
@@ -100,7 +104,7 @@ export default function App() {
 
   const [isTableOpen, setIsTableOpen] = useState(false);
   const [isSimOpen, setIsSimOpen] = useState(false);
-  const [isQuoteOpen, setIsQuoteOpen] = useState(false); // NUOVO STATO PER TENDINA WHATSAPP
+  const [isQuoteOpen, setIsQuoteOpen] = useState(false);
   const [isEventsOpen, setIsEventsOpen] = useState(false);
   const [hasViewedEvents, setHasViewedEvents] = useState(false);
   const [quoteDates, setQuoteDates] = useState({ startDate: getTodayISO(), endDate: getFutureISO(3) });
@@ -227,12 +231,10 @@ export default function App() {
   useEffect(() => { if (upcomingEvents.length > 0) setHasViewedEvents(false); }, [upcomingEvents.length]);
   const toggleEventsMenu = () => { setIsEventsOpen(!isEventsOpen); if (!isEventsOpen) setHasViewedEvents(true); };
 
-  // TESTO GENERATORE PREVENTIVO WHATSAPP
   const quoteText = `👋 Ciao!\nEcco il preventivo per il tuo soggiorno a *${apartment.name}*.\n\n📅 Date: dal ${quoteDates.startDate} al ${quoteDates.endDate}\n👥 Ospiti: ${apartment.guests}\n🌙 Notti totali: ${totalDays}\n\n💰 *Totale: €${totalChallengerStay.toFixed(2)}*\n_(Tutte le spese e pulizie incluse)_\n\nFammi sapere se vuoi procedere con la prenotazione! 🏡`;
   const copyToClipboard = () => { navigator.clipboard.writeText(quoteText); alert("Preventivo copiato negli appunti!"); };
   const openWhatsApp = () => { window.open(`https://wa.me/?text=${encodeURIComponent(quoteText)}`, '_blank'); };
 
-  // STILI GLOBALI (Schiacciati)
   const GlobalStyles = () => (
     <style>{`
       .challenger-app-wrapper * { box-sizing: border-box !important; }
@@ -250,8 +252,11 @@ export default function App() {
       .pulse-notification { animation: gentlePulse 2s infinite; } @keyframes gentlePulse { 0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); } 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); } }
       .blur-locked { filter: blur(6px) grayscale(0.5); opacity: 0.6; pointer-events: none; user-select: none; transition: all 0.4s ease; } .lock-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; color: #475569; background: rgba(248, 250, 252, 0.4); }
       .lock-screen-bg { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95); z-index: 999999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
-      .lock-box { background: #1e293b; padding: 40px; border-radius: 20px; text-align: center; border: 1px solid #334155; box-shadow: 0 20px 40px rgba(0,0,0,0.5); width: 340px; }
-      .lock-input { width: 100%; text-align: center; font-size: 32px; letter-spacing: 12px; padding: 12px; border-radius: 12px; border: 2px solid #3b82f6; background: #0f172a; color: #fff; margin: 24px 0; outline: none; }
+      .lock-box { background: #1e293b; padding: 40px; border-radius: 20px; text-align: center; border: 1px solid #334155; box-shadow: 0 20px 40px rgba(0,0,0,0.5); width: 340px; max-width: 90vw; }
+      .lock-input { width: 100%; text-align: center; font-size: 32px; letter-spacing: 12px; padding: 12px; border-radius: 12px; border: 2px solid #3b82f6; background: #0f172a; color: #fff; margin: 20px 0; outline: none; }
+      
+      @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-5px); } }
+
       .epic-splash-overlay { position: fixed; inset: 0; background: radial-gradient(circle at 50% 40%, #1e3a8a 0%, #0f172a 60%, #020617 100%); z-index: 99999; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s, visibility 0.5s; overflow: hidden; }
       .splash-fade-out { opacity: 0; visibility: hidden; }
       .cyber-grid { position: absolute; width: 200vw; height: 200vh; background-image: linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px); background-size: 40px 40px; transform: perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px); animation: gridMove 10s linear infinite; opacity: 0.4; } @keyframes gridMove { 0% { background-position: 0 0; } 100% { background-position: 0 40px; } }
@@ -280,7 +285,14 @@ export default function App() {
               <Lock size={40} color="#3b82f6" />
             </div>
             <h2 style={{ color: '#fff', fontSize: '20px', fontWeight: '800', margin: '0 0 8px 0' }}>Accesso Riservato</h2>
-            <p style={{ color: '#94a3b8', fontSize: '13px', margin: 0 }}>Inserisci il PIN per avviare l'algoritmo</p>
+            <p style={{ color: '#94a3b8', fontSize: '13px', margin: '0 0 16px 0' }}>Inserisci il PIN per avviare l'algoritmo</p>
+            
+            {loginError && (
+              <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #ef4444', color: '#fca5a5', padding: '10px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', animation: 'shake 0.4s' }}>
+                <AlertCircle size={16} /> {loginError}
+              </div>
+            )}
+
             <input type="password" maxLength={4} className="lock-input" value={pinInput} onChange={(e) => setPinInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleLogin()} placeholder="••••" />
             <button onClick={handleLogin} style={{ width: '100%', padding: '14px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: '700', cursor: 'pointer', transition: 'background 0.2s' }}>Sblocca Sistema</button>
           </div>
@@ -445,7 +457,10 @@ export default function App() {
             <div className={!isConfigComplete ? 'blur-locked' : ''} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><h2 style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Andamento vs Mercato</h2><Info size={16} color="#94a3b8" /></div>
-                <div style={{ display: 'flex', gap: '10px' }}><span style={{ fontSize: '11px', background: '#eff6ff', color: '#2563eb', padding: '4px 8px', borderRadius: '6px', fontWeight: '700' }}>Challenger</span><span style={{ fontSize: '11px', background: '#f5f3ff', color: '#7c3aed', padding: '4px 8px', borderRadius: '6px', fontWeight: '700' }}>Mediana</span></div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <span style={{ fontSize: '11px', background: '#eff6ff', color: '#2563eb', padding: '4px 8px', borderRadius: '6px', fontWeight: '700' }}>Challenger</span>
+                  <span style={{ fontSize: '11px', background: '#f5f3ff', color: '#7c3aed', padding: '4px 8px', borderRadius: '6px', fontWeight: '700' }}>Mediana</span>
+                </div>
               </div>
 
               <div className="chart-wrapper">
