@@ -303,7 +303,9 @@ export default function App() {
           <div className="cyber-grid"></div><div className="supernova-flash"></div>
           <div className="splash-stage">
             <div className="shockwave sw-1"></div><div className="shockwave sw-2"></div><div className="shockwave sw-3"></div>
-            <div className="epic-house-container"><div className="epic-house-glow"></div><div className="epic-house-core"><Home size={84} strokeWidth={2} color="#ffffff" className="house-svg" /></div></div>
+            <div className="epic-house-container"><div className="epic-house-glow"></div><div className="epic-house-core">
+  <img src="/casa_soldi_icon.jpg" alt="Logo Challenger" style={{ width: '80%', height: '80%', objectFit: 'contain', borderRadius: '12px', animation: 'svgPulse 1.6s ease-in forwards' }} />
+</div></div>
             {explosionParticles.map((p, i) => (<div key={i} className="epic-particle" style={{ '--tx': p.tx, '--ty': p.ty, '--rX': p.rX, '--rY': p.rY, '--rZ': p.rZ, '--delay': p.delay, '--scale': p.scale }}>{p.symbol}</div>))}
             <div className="epic-title-container"><div className="epic-title">CHALLENGERHOUSE</div><div className="epic-subtitle">Inizializzazione Algoritmo...</div></div>
           </div>
