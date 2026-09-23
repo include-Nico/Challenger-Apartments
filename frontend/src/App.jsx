@@ -9,7 +9,7 @@ import {
   ChevronDown, ChevronUp, Check, Wallet, Percent, Info 
 } from 'lucide-react';
 
-// URL Dinamico: usa la variabile d'ambiente di Vercel (se presente) o fallback su localhost per lo sviluppo
+// URL Dinamico: usa la variabile d'ambiente di Vercel (se presente) o fallback locale
 const API_BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8000').replace(/\/$/, '');
 
 // Utility per persistenza localStorage
@@ -23,6 +23,27 @@ const loadSavedState = (key, defaultValue) => {
 };
 
 export default function App() {
+  // Gestione Intro & Splash Animation
+  const [splashFinished, setSplashFinished] = useState(false);
+  const [splashFading, setSplashFading] = useState(false);
+
+  useEffect(() => {
+    // Avvia la dissolvenza dopo l'esplosione
+    const fadeTimer = setTimeout(() => {
+      setSplashFading(true);
+    }, 2400);
+
+    // Rimuove completamente lo splash screen dal DOM
+    const finishTimer = setTimeout(() => {
+      setSplashFinished(true);
+    }, 2900);
+
+    return () => {
+      clearTimeout(fadeTimer);
+      clearTimeout(finishTimer);
+    };
+  }, []);
+
   const getTodayISO = () => new Date().toISOString().split('T')[0];
   const getFutureISO = (days) => {
     const d = new Date();
@@ -220,10 +241,212 @@ export default function App() {
   };
 
   return (
-    <div className="challenger-app-wrapper" style={{ padding: '32px', fontFamily: 'system-ui, -apple-system, sans-serif', backgroundColor: '#f8fafc', minHeight: '100vh', color: '#0f172a' }}>
+    <div className="challenger-app-wrapper" style={{ padding: '32px', fontFamily: 'system-ui, -apple-system, sans-serif', backgroundColor: '#f8fafc', minHeight: '100vh', color: '#0f172a', position: 'relative' }}>
       
+      {/* ANIMAZIONE SPLASH SCREEN ALL'ENTRATA */}
+      {!splashFinished && (
+        <div className={`splash-overlay ${splashFading ? 'splash-fade' : ''}`}>
+          <div className="splash-stage">
+            
+            {/* Onde d'urto dell'esplosione */}
+            <div className="blast-ring"></div>
+            <div className="blast-ring delay-ring"></div>
+
+            {/* Casa stilizzata che pulsa ed esplode */}
+            <div className="exploding-house">
+              <div className="house-badge">
+                <Home size={76} strokeWidth={2.2} color="#ffffff" />
+              </div>
+            </div>
+
+            {/* Soldi che schizzano fuori dall'esplosione */}
+            <span className="cash-particle p1">💶</span>
+            <span className="cash-particle p2">€</span>
+            <span className="cash-particle p3">💰</span>
+            <span className="cash-particle p4">💸</span>
+            <span className="cash-particle p5">€</span>
+            <span className="cash-particle p6">💶</span>
+            <span className="cash-particle p7">💸</span>
+            <span className="cash-particle p8">💰</span>
+            <span className="cash-particle p9">€</span>
+            <span className="cash-particle p10">💶</span>
+            <span className="cash-particle p11">💸</span>
+            <span className="cash-particle p12">€</span>
+
+            {/* Testo introduttivo */}
+            <div className="splash-copy">
+              <h2 style={{ fontSize: '24px', fontWeight: '800', letterSpacing: '-0.5px', margin: '0 0 6px 0', color: '#ffffff' }}>
+                Challenger Pricing
+              </h2>
+              <p style={{ fontSize: '13px', color: '#93c5fd', margin: 0, fontWeight: '500' }}>
+                Caricamento dati di mercato ed eventi in corso...
+              </p>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* STILI CSS GENERALI E ANIMAZIONI SPLASH */}
       <style>{`
         .challenger-app-wrapper * { box-sizing: border-box !important; }
+        
+        /* Contenitore Splash Screen a tutto schermo */
+        .splash-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          background: radial-gradient(circle at center, #1d4ed8 0%, #1e40af 60%, #0f172a 100%);
+          z-index: 99999;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+        }
+        .splash-fade {
+          opacity: 0;
+          visibility: hidden;
+          pointer-events: none;
+        }
+
+        .splash-stage {
+          position: relative;
+          width: 320px;
+          height: 320px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        /* Casa Stilizzata & Animazione Esplosione */
+        .exploding-house {
+          position: relative;
+          z-index: 20;
+          animation: houseBuildup 1.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+        .house-badge {
+          background: rgba(255, 255, 255, 0.12);
+          border: 2px solid rgba(255, 255, 255, 0.4);
+          padding: 24px;
+          border-radius: 28px;
+          backdrop-filter: blur(12px);
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.2);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        @keyframes houseBuildup {
+          0% {
+            transform: scale(0.3);
+            opacity: 0;
+          }
+          40% {
+            transform: scale(1.08);
+            opacity: 1;
+          }
+          70% {
+            transform: scale(0.96) rotate(-2deg);
+          }
+          85% {
+            transform: scale(1.22) rotate(3deg);
+            filter: brightness(2);
+          }
+          96% {
+            transform: scale(1.4);
+            filter: brightness(4);
+            opacity: 1;
+          }
+          100% {
+            transform: scale(0);
+            opacity: 0;
+          }
+        }
+
+        /* Onda d'urto radiale */
+        .blast-ring {
+          position: absolute;
+          width: 80px;
+          height: 80px;
+          border-radius: 50%;
+          border: 3px solid rgba(255, 255, 255, 0.9);
+          opacity: 0;
+          pointer-events: none;
+          z-index: 15;
+          animation: ringExpand 1.1s cubic-bezier(0.1, 0.8, 0.3, 1) 1.25s forwards;
+        }
+        .delay-ring {
+          border-color: #60a5fa;
+          animation-delay: 1.35s;
+        }
+
+        @keyframes ringExpand {
+          0% {
+            transform: scale(0.5);
+            opacity: 0.9;
+          }
+          100% {
+            transform: scale(4.8);
+            opacity: 0;
+          }
+        }
+
+        /* Soldi che esplodono in tutte le direzioni */
+        .cash-particle {
+          position: absolute;
+          font-size: 26px;
+          font-weight: 800;
+          color: #fbbf24;
+          text-shadow: 0 4px 10px rgba(0,0,0,0.4);
+          opacity: 0;
+          z-index: 25;
+          pointer-events: none;
+        }
+
+        .p1  { animation: burstP1  1s ease-out 1.28s forwards; }
+        .p2  { animation: burstP2  1s ease-out 1.30s forwards; }
+        .p3  { animation: burstP3  1.1s ease-out 1.26s forwards; }
+        .p4  { animation: burstP4  1s ease-out 1.32s forwards; }
+        .p5  { animation: burstP5  1.1s ease-out 1.27s forwards; }
+        .p6  { animation: burstP6  1s ease-out 1.31s forwards; }
+        .p7  { animation: burstP7  1.1s ease-out 1.29s forwards; }
+        .p8  { animation: burstP8  1s ease-out 1.28s forwards; }
+        .p9  { animation: burstP9  1s ease-out 1.33s forwards; }
+        .p10 { animation: burstP10 1.1s ease-out 1.30s forwards; }
+        .p11 { animation: burstP11 1s ease-out 1.26s forwards; }
+        .p12 { animation: burstP12 1.1s ease-out 1.29s forwards; }
+
+        @keyframes burstP1  { 0% { transform: translate(0, 0) scale(0.5); opacity: 1; } 100% { transform: translate(0px, -150px) rotate(45deg) scale(1.4); opacity: 0; } }
+        @keyframes burstP2  { 0% { transform: translate(0, 0) scale(0.5); opacity: 1; } 100% { transform: translate(110px, -120px) rotate(-30deg) scale(1.6); opacity: 0; } }
+        @keyframes burstP3  { 0% { transform: translate(0, 0) scale(0.5); opacity: 1; } 100% { transform: translate(160px, -30px) rotate(60deg) scale(1.5); opacity: 0; } }
+        @keyframes burstP4  { 0% { transform: translate(0, 0) scale(0.5); opacity: 1; } 100% { transform: translate(140px, 90px) rotate(20deg) scale(1.3); opacity: 0; } }
+        @keyframes burstP5  { 0% { transform: translate(0, 0) scale(0.5); opacity: 1; } 100% { transform: translate(40px, 150px) rotate(-50deg) scale(1.7); opacity: 0; } }
+        @keyframes burstP6  { 0% { transform: translate(0, 0) scale(0.5); opacity: 1; } 100% { transform: translate(-60px, 150px) rotate(80deg) scale(1.4); opacity: 0; } }
+        @keyframes burstP7  { 0% { transform: translate(0, 0) scale(0.5); opacity: 1; } 100% { transform: translate(-140px, 80px) rotate(-40deg) scale(1.5); opacity: 0; } }
+        @keyframes burstP8  { 0% { transform: translate(0, 0) scale(0.5); opacity: 1; } 100% { transform: translate(-160px, -20px) rotate(70deg) scale(1.6); opacity: 0; } }
+        @keyframes burstP9  { 0% { transform: translate(0, 0) scale(0.5); opacity: 1; } 100% { transform: translate(-110px, -120px) rotate(-65deg) scale(1.3); opacity: 0; } }
+        @keyframes burstP10 { 0% { transform: translate(0, 0) scale(0.5); opacity: 1; } 100% { transform: translate(-40px, -160px) rotate(35deg) scale(1.7); opacity: 0; } }
+        @keyframes burstP11 { 0% { transform: translate(0, 0) scale(0.5); opacity: 1; } 100% { transform: translate(70px, -140px) rotate(-75deg) scale(1.2); opacity: 0; } }
+        @keyframes burstP12 { 0% { transform: translate(0, 0) scale(0.5); opacity: 1; } 100% { transform: translate(-80px, 110px) rotate(45deg) scale(1.5); opacity: 0; } }
+
+        .splash-copy {
+          position: absolute;
+          bottom: -40px;
+          text-align: center;
+          width: 100%;
+          animation: textFade 2s ease forwards;
+        }
+
+        @keyframes textFade {
+          0% { opacity: 0; transform: translateY(10px); }
+          30% { opacity: 1; transform: translateY(0); }
+          85% { opacity: 1; }
+          100% { opacity: 0; }
+        }
+
+        /* Stili Dashboard Applicazione */
         .metric-card { transition: transform 0.2s ease, box-shadow 0.2s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
         .metric-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04); }
         .styled-input, select.styled-input {
