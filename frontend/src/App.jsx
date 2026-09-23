@@ -435,7 +435,7 @@ export default function App() {
             <span>Oggi: <strong style={{ color: '#0f172a' }}>{getTodayISO()}</strong></span>
           </div>
 
-          <div className="tab-btn-group" style={{ background: '#e2e8f0', padding: '4px', borderRadius: '12px' }}>
+          <div className="tab-btn-group" style={{ display: 'flex', background: '#e2e8f0', padding: '4px', borderRadius: '12px' }}>
             <button onClick={() => setActiveTab('listing')} className={`tab-btn ${activeTab === 'listing' ? 'active-tab' : ''}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '8px', border: 'none', fontSize: '13px', fontWeight: '600', cursor: 'pointer', background: activeTab === 'listing' ? '#fff' : 'transparent', color: activeTab === 'listing' ? '#2563eb' : '#64748b', boxShadow: activeTab === 'listing' ? '0 2px 4px rgba(0,0,0,0.06)' : 'none' }}>
               <Layers size={16} /> Listino
             </button>
