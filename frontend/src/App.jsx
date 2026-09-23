@@ -4,7 +4,7 @@ import {
   CartesianGrid, Legend 
 } from 'recharts';
 import { 
-  Home, TrendingUp, Sparkles, Calendar, ArrowUpRight, 
+  Home, Sparkles, Calendar, ArrowUpRight, 
   Layers, Calculator, MapPin, AlertCircle, Users, Bell, 
   ChevronDown, ChevronUp, Check, Wallet, Info 
 } from 'lucide-react';
@@ -254,7 +254,7 @@ export default function App() {
               </div>
             ))}
             <div className="epic-title-container">
-              <div className="epic-title">CHALLENGER PRICING</div>
+              <div className="epic-title">CHALLENGERHOUSE</div>
               <div className="epic-subtitle">Inizializzazione Algoritmo...</div>
             </div>
           </div>
@@ -263,7 +263,6 @@ export default function App() {
 
       {/* STILI CSS RESPONSIVE & ANIMAZIONI */}
       <style>{`
-        /* Reset Base */
         .challenger-app-wrapper * { box-sizing: border-box !important; }
         
         .challenger-app-wrapper {
@@ -275,91 +274,38 @@ export default function App() {
           position: relative;
         }
 
-        /* STRUTTURE LAYOUT */
-        .header-layout {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 32px;
-          flex-wrap: wrap;
-          gap: 16px;
-        }
-        .header-actions {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          flex-wrap: wrap;
-        }
-        .metrics-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-          gap: 20px;
-          margin-bottom: 24px;
-        }
-        .main-grid {
-          display: grid;
-          grid-template-columns: 360px 1fr;
-          gap: 24px;
-          margin-bottom: 28px;
-        }
-        .sim-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 24px;
-          align-items: center;
-        }
-        .form-row {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 12px;
-        }
-        .chart-wrapper {
-          height: 400px;
-          width: 100%;
-          margin-top: 20px;
-        }
+        .header-layout { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; flex-wrap: wrap; gap: 16px; }
+        .header-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 24px; }
+        .main-grid { display: grid; grid-template-columns: 360px 1fr; gap: 24px; margin-bottom: 28px; }
+        .sim-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: center; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .chart-wrapper { height: 400px; width: 100%; margin-top: 20px; }
 
-        /* MEDIA QUERIES PER SMARTPHONE */
         @media (max-width: 768px) {
-          .challenger-app-wrapper {
-            padding: 16px;
-          }
-          .main-grid {
-            grid-template-columns: 1fr; /* Mette Configurazione sopra al Grafico */
-          }
-          .sim-grid {
-            grid-template-columns: 1fr; /* Incolonna il simulatore */
-            gap: 16px;
-          }
-          .header-layout {
-            flex-direction: column;
-            align-items: flex-start;
-          }
-          .header-actions {
-            width: 100%;
-          }
-          .tab-btn-group {
-            width: 100%;
-            display: flex;
-          }
-          .tab-btn-group button {
-            flex: 1;
-            justify-content: center;
-          }
-          .form-row {
-            grid-template-columns: 1fr; /* I form a 2 colonne diventano a 1 colonna */
-          }
-          .chart-wrapper {
-            height: 300px; /* Grafico un po' più basso su telefono */
-          }
-          .date-inputs {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
+          .challenger-app-wrapper { padding: 16px; }
+          .main-grid { grid-template-columns: 1fr; }
+          .sim-grid { grid-template-columns: 1fr; gap: 16px; }
+          .header-layout { flex-direction: column; align-items: flex-start; }
+          .header-actions { width: 100%; }
+          .tab-btn-group { width: 100%; display: flex; }
+          .tab-btn-group button { flex: 1; justify-content: center; }
+          .form-row { grid-template-columns: 1fr; }
+          .chart-wrapper { height: 300px; }
+          .date-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+          
+          /* FIX: Tendina Notifiche su Mobile */
+          .events-dropdown {
+            position: fixed !important;
+            top: 72px !important;
+            right: 16px !important;
+            left: 16px !important;
+            width: auto !important;
+            max-width: none !important;
+            z-index: 999999 !important;
           }
         }
 
-        /* CSS EPIC SPLASH SCREEN */
         .epic-splash-overlay { position: fixed; inset: 0; background: radial-gradient(circle at 50% 40%, #1e3a8a 0%, #0f172a 60%, #020617 100%); z-index: 99999; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.5s; overflow: hidden; }
         .splash-fade-out { opacity: 0; visibility: hidden; pointer-events: none; }
         .cyber-grid { position: absolute; width: 200vw; height: 200vh; background-image: linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px); background-size: 40px 40px; transform: perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px); animation: gridMove 10s linear infinite; opacity: 0.4; }
@@ -387,7 +333,6 @@ export default function App() {
         @keyframes textShine { to { background-position: 200% center; } }
         @keyframes textEntrance { 0% { opacity: 0; transform: translateY(20px); filter: blur(10px); } 20% { opacity: 1; transform: translateY(0); filter: blur(0px); } 80% { opacity: 1; transform: translateY(0); filter: blur(0px); } 100% { opacity: 0; transform: translateY(-20px); filter: blur(10px); } }
         
-        /* ALTRI COMPONENTI UI */
         .metric-card { background: #fff; padding: 24px; border-radius: 16px; border: 1px solid #e2e8f0; transition: transform 0.2s ease, box-shadow 0.2s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
         .metric-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04); }
         .styled-input, select.styled-input { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; background-color: #ffffff !important; color: #0f172a !important; outline: none; font-family: inherit; font-size: 14px; margin-top: 6px; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
@@ -410,14 +355,14 @@ export default function App() {
         </div>
       )}
 
-      {/* HEADER RESPONSIVE */}
+      {/* HEADER RESPONSIVE CON NUOVA ICONA */}
       <header className="header-layout">
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ background: 'linear-gradient(135deg, #2563eb, #1e40af)', padding: '10px', borderRadius: '12px', color: '#fff' }}>
-              <TrendingUp size={24} />
+              <Home size={24} />
             </div>
-            <h1 style={{ fontSize: '26px', fontWeight: '800', letterSpacing: '-0.5px', color: '#0f172a', margin: 0 }}>Challenger Pricing</h1>
+            <h1 style={{ fontSize: '26px', fontWeight: '800', letterSpacing: '-0.5px', color: '#0f172a', margin: 0 }}>ChallengerHouse</h1>
           </div>
           <p style={{ color: '#64748b', fontSize: '14px', marginTop: '6px', fontWeight: '500', margin: '6px 0 0 0' }}>
             Algoritmo predittivo per affitti brevi
@@ -433,7 +378,7 @@ export default function App() {
               )}
             </button>
             {isEventsOpen && (
-              <div className="custom-scroll" style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', width: '300px', maxWidth: '90vw', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 100, maxHeight: '400px', overflowY: 'auto' }}>
+              <div className="custom-scroll events-dropdown" style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', width: '300px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 100, maxHeight: '400px', overflowY: 'auto' }}>
                 <div style={{ padding: '16px', borderBottom: '1px solid #f1f5f9', background: '#f8fafc', position: 'sticky', top: 0, zIndex: 10 }}>
                   <h3 style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Eventi nel periodo ({upcomingEvents.length})</h3>
                 </div>
@@ -544,7 +489,6 @@ export default function App() {
                 <option value={20}>Property Manager / Agenzia (~20%)</option>
                 <option value={0}>Contanti / Nessuna Trattenuta (0%)</option>
               </select>
-              <span className="helper-text">Scegli la percentuale trattenuta dalla piattaforma.</span>
             </div>
 
             <div style={{ background: 'linear-gradient(135deg, #10b981, #059669)', padding: '24px', borderRadius: '16px', color: '#fff', boxShadow: '0 4px 10px rgba(16,185,129,0.3)' }}>
@@ -568,11 +512,9 @@ export default function App() {
 
       {/* GRIGLIA PRINCIPALE (FORM + GRAFICO) RESPONSIVE */}
       <div className="main-grid">
-        
-        {/* Form Configurazione */}
         <div style={{ background: '#fff', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
           <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px', color: '#0f172a', margin: '0 0 20px 0' }}>
-            <Home size={18} color="#2563eb" /> Configurazione
+            <Home size={18} color="#2563eb" /> Configurazione Asset
           </h2>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -715,7 +657,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* Tabella Analitica con scroll orizzontale su mobile */}
       <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
         <button onClick={() => setIsTableOpen(!isTableOpen)} className="tab-btn" style={{ width: '100%', padding: '20px 24px', border: 'none', background: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', textAlign: 'left' }}>
           <div>
