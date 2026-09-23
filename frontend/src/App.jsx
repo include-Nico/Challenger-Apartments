@@ -326,7 +326,7 @@ export default function App() {
         </div>
       )}
 
-      {/* HEADER */}
+      {/* HEADER MIGLIORATO (Pulsante Blocco Raggruppato) */}
       <header className="header-layout">
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -337,35 +337,42 @@ export default function App() {
         </div>
 
         <div className="header-actions">
-          <div style={{ position: 'relative' }} ref={eventsRef}>
-            <button onClick={toggleEventsMenu} className="tab-btn" disabled={!isConfigComplete} style={{ opacity: isConfigComplete ? 1 : 0.5, background: '#fff', border: '1px solid #e2e8f0', padding: '8px', borderRadius: '10px', cursor: isConfigComplete ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', position: 'relative' }}>
-              <Bell size={20} color="#475569" />
-              {upcomingEvents.length > 0 && !hasViewedEvents && <span style={{ position: 'absolute', top: '-2px', right: '-2px', width: '10px', height: '10px', backgroundColor: '#ef4444', borderRadius: '50%', border: '2px solid #fff' }}></span>}
-            </button>
-            {isEventsOpen && (
-              <div className="custom-scroll events-dropdown" style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', width: '300px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 100, maxHeight: '400px', overflowY: 'auto' }}>
-                <div style={{ padding: '16px', borderBottom: '1px solid #f1f5f9', background: '#f8fafc', position: 'sticky', top: 0, zIndex: 10 }}><h3 style={{ fontSize: '14px', fontWeight: '800', margin: 0 }}>Eventi nel periodo ({upcomingEvents.length})</h3></div>
-                <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {upcomingEvents.length > 0 ? upcomingEvents.map((ev, idx) => (
-                    <div key={idx} style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px', padding: '10px 12px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}><Sparkles size={14} color="#3b82f6" /><span style={{ fontSize: '13px', fontWeight: '700', color: '#1e3a8a' }}>{ev.name}</span></div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ fontSize: '11px', color: '#64748b', fontWeight: '600' }}>dal {ev.firstDate.slice(5)}</span><span style={{ fontSize: '11px', background: '#3b82f6', color: '#fff', padding: '2px 8px', borderRadius: '6px', fontWeight: '800' }}>+{Math.round((ev.multiplier - 1) * 100)}%</span></div>
-                    </div>
-                  )) : <p style={{ fontSize: '13px', color: '#64748b', margin: 0, textAlign: 'center' }}>Nessun evento rilevato.</p>}
+          
+          {/* Gruppo Notifiche e Blocco Sistema (Restano sempre affiancati) */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ position: 'relative' }} ref={eventsRef}>
+              <button onClick={toggleEventsMenu} className="tab-btn" disabled={!isConfigComplete} style={{ opacity: isConfigComplete ? 1 : 0.5, background: '#fff', border: '1px solid #e2e8f0', padding: '8px', borderRadius: '10px', cursor: isConfigComplete ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', position: 'relative' }}>
+                <Bell size={20} color="#475569" />
+                {upcomingEvents.length > 0 && !hasViewedEvents && <span style={{ position: 'absolute', top: '-2px', right: '-2px', width: '10px', height: '10px', backgroundColor: '#ef4444', borderRadius: '50%', border: '2px solid #fff' }}></span>}
+              </button>
+              {isEventsOpen && (
+                <div className="custom-scroll events-dropdown" style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', width: '300px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 100, maxHeight: '400px', overflowY: 'auto' }}>
+                  <div style={{ padding: '16px', borderBottom: '1px solid #f1f5f9', background: '#f8fafc', position: 'sticky', top: 0, zIndex: 10 }}><h3 style={{ fontSize: '14px', fontWeight: '800', margin: 0 }}>Eventi nel periodo ({upcomingEvents.length})</h3></div>
+                  <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {upcomingEvents.length > 0 ? upcomingEvents.map((ev, idx) => (
+                      <div key={idx} style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px', padding: '10px 12px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}><Sparkles size={14} color="#3b82f6" /><span style={{ fontSize: '13px', fontWeight: '700', color: '#1e3a8a' }}>{ev.name}</span></div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ fontSize: '11px', color: '#64748b', fontWeight: '600' }}>dal {ev.firstDate.slice(5)}</span><span style={{ fontSize: '11px', background: '#3b82f6', color: '#fff', padding: '2px 8px', borderRadius: '6px', fontWeight: '800' }}>+{Math.round((ev.multiplier - 1) * 100)}%</span></div>
+                      </div>
+                    )) : <p style={{ fontSize: '13px', color: '#64748b', margin: 0, textAlign: 'center' }}>Nessun evento rilevato.</p>}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+
+            <button onClick={() => { setIsAuthenticated(false); setPinInput(''); }} style={{ background: '#fef2f2', border: '1px solid #fecaca', padding: '8px', borderRadius: '10px', cursor: 'pointer', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Blocca App">
+              <Unlock size={20} />
+            </button>
           </div>
+
           <div style={{ background: '#fff', border: '1px solid #e2e8f0', padding: '8px 14px', borderRadius: '10px', fontSize: '13px', color: '#475569', display: 'flex', alignItems: 'center', gap: '8px', flex: 1, justifyContent: 'center' }}>
             <Calendar size={16} color="#2563eb" /><span>Oggi: <strong style={{ color: '#0f172a' }}>{getTodayISO()}</strong></span>
           </div>
+
           <div className="tab-btn-group" style={{ display: 'flex', background: '#e2e8f0', padding: '4px', borderRadius: '12px' }}>
             <button onClick={() => setActiveTab('listing')} className={`tab-btn ${activeTab === 'listing' ? 'active-tab' : ''}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '8px', border: 'none', fontSize: '13px', fontWeight: '600', cursor: 'pointer', background: activeTab === 'listing' ? '#fff' : 'transparent', color: activeTab === 'listing' ? '#2563eb' : '#64748b', boxShadow: activeTab === 'listing' ? '0 2px 4px rgba(0,0,0,0.06)' : 'none' }}><Layers size={16} /> Listino</button>
             <button onClick={() => setActiveTab('quote')} className={`tab-btn ${activeTab === 'quote' ? 'active-tab' : ''}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '8px', border: 'none', fontSize: '13px', fontWeight: '600', cursor: 'pointer', background: activeTab === 'quote' ? '#fff' : 'transparent', color: activeTab === 'quote' ? '#2563eb' : '#64748b', boxShadow: activeTab === 'quote' ? '0 2px 4px rgba(0,0,0,0.06)' : 'none' }}><Calculator size={16} /> Preventivo</button>
           </div>
-          <button onClick={() => { setIsAuthenticated(false); setPinInput(''); }} style={{ background: '#fef2f2', border: '1px solid #fecaca', padding: '8px', borderRadius: '10px', cursor: 'pointer', color: '#ef4444' }} title="Blocca App">
-            <Unlock size={20} />
-          </button>
         </div>
       </header>
 
