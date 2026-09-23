@@ -9,6 +9,10 @@ import {
   ChevronDown, ChevronUp, Check, Wallet, Percent, Info 
 } from 'lucide-react';
 
+// URL Dinamico: usa la variabile d'ambiente di Vercel (se presente) o fallback su localhost per lo sviluppo
+const API_BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8000').replace(/\/$/, '');
+
+// Utility per persistenza localStorage
 const loadSavedState = (key, defaultValue) => {
   try {
     const saved = localStorage.getItem(key);
@@ -66,29 +70,29 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState(false);
 
-  // Sincronizzazione LocalStorage
+  // Sincronizzazione automatica LocalStorage
   useEffect(() => { localStorage.setItem('challenger_activeTab', JSON.stringify(activeTab)); }, [activeTab]);
   useEffect(() => { localStorage.setItem('challenger_horizon', JSON.stringify(listingHorizonDays)); }, [listingHorizonDays]);
   useEffect(() => { localStorage.setItem('challenger_otaRate', JSON.stringify(otaRate)); }, [otaRate]);
   useEffect(() => { localStorage.setItem('challenger_apartment', JSON.stringify(apartment)); }, [apartment]);
 
-  // Caricamento Quartieri
+  // Caricamento Quartieri dal backend
   useEffect(() => {
     const fetchNeighbourhoods = async () => {
       try {
-        const res = await fetch("http://localhost:8000/api/neighbourhoods");
+        const res = await fetch(`${API_BASE_URL}/api/neighbourhoods`);
         if (res.ok) {
           const data = await res.json();
           setAllNeighbourhoods(data.neighbourhoods || []);
         }
       } catch (e) {
-        console.warn("API Quartieri non raggiungibile", e);
+        console.warn("API Quartieri non raggiungibile all'indirizzo:", API_BASE_URL, e);
       }
     };
     fetchNeighbourhoods();
   }, []);
 
-  // Gestione chiusure click esterno (Tendina quartieri e Tendina Eventi)
+  // Chiusura dropdown al click esterno
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (autocompleteRef.current && !autocompleteRef.current.contains(event.target)) {
@@ -120,7 +124,7 @@ export default function App() {
     setApartment(prev => ({ ...prev, [field]: num }));
   };
 
-  // Fetch dati di calcolo
+  // Calcolo dinamico tariffe
   const fetchPricing = async () => {
     setLoading(true);
     setServerError(false);
@@ -133,7 +137,7 @@ export default function App() {
           const d = new Date(today);
           d.setDate(today.getDate() + i);
           const dateStr = d.toISOString().split('T')[0];
-          const url = `http://localhost:8000/api/pricing/calculate?target_date=${dateStr}&base_price=${apartment.basePrice}&floor_price=${apartment.floorPrice}&champion_price=${apartment.championPrice}&neighbourhood=${encodeURIComponent(apartment.neighbourhood)}&max_guests=${apartment.maxGuests}&extra_guest_fee=${apartment.extraGuestFee}&daily_extra_fee=${apartment.dailyExtraFee}&guests=${Math.max(1, apartment.guests)}`;
+          const url = `${API_BASE_URL}/api/pricing/calculate?target_date=${dateStr}&base_price=${apartment.basePrice}&floor_price=${apartment.floorPrice}&champion_price=${apartment.championPrice}&neighbourhood=${encodeURIComponent(apartment.neighbourhood)}&max_guests=${apartment.maxGuests}&extra_guest_fee=${apartment.extraGuestFee}&daily_extra_fee=${apartment.dailyExtraFee}&guests=${Math.max(1, apartment.guests)}`;
           const res = await fetch(url);
           if (!res.ok) throw new Error("Server Error");
           results.push(await res.json());
@@ -145,7 +149,7 @@ export default function App() {
 
         while (cur < end) {
           const dateStr = cur.toISOString().split('T')[0];
-          const url = `http://localhost:8000/api/pricing/calculate?target_date=${dateStr}&base_price=${apartment.basePrice}&floor_price=${apartment.floorPrice}&champion_price=${apartment.championPrice}&neighbourhood=${encodeURIComponent(apartment.neighbourhood)}&max_guests=${apartment.maxGuests}&extra_guest_fee=${apartment.extraGuestFee}&daily_extra_fee=${apartment.dailyExtraFee}&guests=${Math.max(1, apartment.guests)}`;
+          const url = `${API_BASE_URL}/api/pricing/calculate?target_date=${dateStr}&base_price=${apartment.basePrice}&floor_price=${apartment.floorPrice}&champion_price=${apartment.championPrice}&neighbourhood=${encodeURIComponent(apartment.neighbourhood)}&max_guests=${apartment.maxGuests}&extra_guest_fee=${apartment.extraGuestFee}&daily_extra_fee=${apartment.dailyExtraFee}&guests=${Math.max(1, apartment.guests)}`;
           const res = await fetch(url);
           if (!res.ok) throw new Error("Server Error");
           results.push(await res.json());
@@ -193,7 +197,7 @@ export default function App() {
   const challengerCommission = totalChallengerStay * (otaRate / 100);
   const challengerNet = totalChallengerStay - challengerCommission;
 
-  // Estrazione Eventi Univoci
+  // Eventi unici nel periodo
   const upcomingEvents = pricingData
     .filter(row => row.active_event)
     .reduce((acc, row) => {
@@ -203,7 +207,6 @@ export default function App() {
       return acc;
     }, []);
 
-  // Ripristina il badge rosso se cambiano gli eventi rilevati (nuove date inserite)
   const eventNamesString = upcomingEvents.map(e => e.name).join(',');
   useEffect(() => {
     if (upcomingEvents.length > 0) {
@@ -242,9 +245,12 @@ export default function App() {
       `}</style>
 
       {serverError && (
-        <div style={{ background: '#fef2f2', border: '1px solid #f87171', color: '#991b1b', padding: '12px 16px', borderRadius: '10px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
-          <AlertCircle size={18} />
-          <span><strong>Errore Server:</strong> Backend offline o porta occupata. Avvia uvicorn.</span>
+        <div style={{ background: '#fef2f2', border: '1px solid #f87171', color: '#991b1b', padding: '14px 18px', borderRadius: '10px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px' }}>
+          <AlertCircle size={20} />
+          <div>
+            <strong>Backend non raggiungibile:</strong> Impossibile contattare <code>{API_BASE_URL}</code>.
+            Assicurati che Uvicorn sia in esecuzione (se sei in locale) o che l'URL di Render sia configurato su Vercel in <code>VITE_API_URL</code>.
+          </div>
         </div>
       )}
 
@@ -264,7 +270,7 @@ export default function App() {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           
-          {/* Pulsante Notifiche Eventi */}
+          {/* Campanella Notifiche Eventi */}
           <div style={{ position: 'relative' }} ref={eventsRef}>
             <button
               onClick={toggleEventsMenu}
@@ -281,7 +287,7 @@ export default function App() {
               )}
             </button>
 
-            {/* Menu a Tendina Eventi */}
+            {/* Tendina Eventi */}
             {isEventsOpen && (
               <div className="custom-scroll" style={{
                 position: 'absolute', top: '100%', right: 0, marginTop: '8px', width: '320px',
@@ -310,7 +316,7 @@ export default function App() {
                       </div>
                     ))
                   ) : (
-                    <p style={{ fontSize: '13px', color: '#64748b', margin: 0, textAlign: 'center' }}>Nessun evento rilevato nelle date attuali.</p>
+                    <p style={{ fontSize: '13px', color: '#64748b', margin: 0, textAlign: 'center' }}>Nessun evento rilevato nelle date correnti.</p>
                   )}
                 </div>
               </div>
@@ -385,7 +391,7 @@ export default function App() {
 
       </div>
 
-      {/* SEZIONE SIMULATORE OTA COLLASSABILE */}
+      {/* Simulatore OTA Collassabile */}
       <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', marginBottom: '28px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
         <button
           className="tab-btn"
