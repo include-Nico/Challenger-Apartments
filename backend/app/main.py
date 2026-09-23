@@ -87,7 +87,6 @@ def calculate_pricing(
     elif month in [4, 5, 9, 10]:
         season_multiplier = 1.10 # Alta stagione primaverile/autunnale
 
-    # Applichiamo la stagionalità al prezzo base iniziale
     seasonal_base_price = base_price * season_multiplier
 
     # --- FATTORE 3: EVENTI E FESTIVITÀ ---
@@ -105,7 +104,6 @@ def calculate_pricing(
         active_event = holidays[target_date][0]
         multiplier = holidays[target_date][1]
 
-    # Sovrascrittura Grandi Eventi
     if "2026-04-14" <= target_date <= "2026-04-19":
         active_event = "Salone del Mobile"
         multiplier = 2.20
@@ -120,34 +118,26 @@ def calculate_pricing(
         multiplier = 1.65
 
     if not active_event and is_weekend:
-        if dt.weekday() != 6: # Escludi Domenica notte
+        if dt.weekday() != 6:
             active_event = "Weekend Premium"
             multiplier = 1.20
 
-    # Moltiplicatore Totale (Evento + Lead Time)
     total_multiplier = multiplier * lead_multiplier
     calculated_price = seasonal_base_price * total_multiplier
     
-    # --- FATTORE 4: EXTRA OSPITI E FISSI ---
     if guests > 2:
         extra_people = guests - 2
         calculated_price += (extra_people * extra_guest_fee)
 
     calculated_price += daily_extra_fee
-
-    # Sicurezza: Mai sotto il pavimento impostato dall'Host
     final_challenger_price = max(floor_price, calculated_price)
 
-    # --- FATTORE 5: UTILIZZO DI 'MAX_GUESTS' PER LA MEDIANA MERCATO ---
-    # Una casa che ospita 6 persone ha una mediana più alta di una che ne ospita 2
     base_market = base_price * (1.15 if neighbourhood in ["Duomo", "Brera", "Navigli", "Garibaldi"] else 0.95)
-    
-    # Aggiungiamo 15€ alla mediana stimata per ogni posto letto oltre i 2
     capacity_premium = (max_guests - 2) * 15 if max_guests > 2 else 0
     market_median = base_market + capacity_premium
 
     if multiplier > 1.0:
-        market_median *= (multiplier - 0.1) # Anche il mercato si alza durante gli eventi
+        market_median *= (multiplier - 0.1)
 
     delta = round(final_challenger_price - champion_price, 2)
 

@@ -7,9 +7,9 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      injectRegister: 'auto', // Forza l'attivazione della PWA
+      injectRegister: 'auto',
       workbox: {
-        globPatterns: ['**/*.{js,css,html,jpg,jpeg,png,svg,ico}'] // Dice alla PWA di scaricare il tuo JPG
+        globPatterns: ['**/*.{js,css,html,png,svg,ico}']
       },
       manifest: {
         name: 'ChallengerHouse',
@@ -20,16 +20,16 @@ export default defineConfig({
         display: 'standalone', 
         icons: [
           {
-            src: 'casa_soldi_icon.jpg',
+            src: 'casa_soldi_icon.png',
             sizes: '192x192',
-            type: 'image/jpeg',
-            purpose: 'any maskable' // Cruciale per Android
+            type: 'image/png',
+            purpose: 'any maskable'
           },
           {
-            src: 'casa_soldi_icon.jpg',
+            src: 'casa_soldi_icon.png',
             sizes: '512x512',
-            type: 'image/jpeg',
-            purpose: 'any maskable' // Cruciale per Android
+            type: 'image/png',
+            purpose: 'any maskable'
           }
         ]
       }

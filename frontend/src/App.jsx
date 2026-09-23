@@ -303,9 +303,15 @@ export default function App() {
           <div className="cyber-grid"></div><div className="supernova-flash"></div>
           <div className="splash-stage">
             <div className="shockwave sw-1"></div><div className="shockwave sw-2"></div><div className="shockwave sw-3"></div>
-            <div className="epic-house-container"><div className="epic-house-glow"></div><div className="epic-house-core">
-  <img src="/casa_soldi_icon.jpg" alt="Logo Challenger" style={{ width: '80%', height: '80%', objectFit: 'contain', borderRadius: '12px', animation: 'svgPulse 1.6s ease-in forwards' }} />
-</div></div>
+            
+            {/* L'ICONA PWA SOSTITUISCE LA CASETTA SVG */}
+            <div className="epic-house-container">
+              <div className="epic-house-glow"></div>
+              <div className="epic-house-core">
+                <img src="/casa_soldi_icon.png" alt="Logo Challenger" style={{ width: '80%', height: '80%', objectFit: 'contain', borderRadius: '12px' }} />
+              </div>
+            </div>
+
             {explosionParticles.map((p, i) => (<div key={i} className="epic-particle" style={{ '--tx': p.tx, '--ty': p.ty, '--rX': p.rX, '--rY': p.rY, '--rZ': p.rZ, '--delay': p.delay, '--scale': p.scale }}>{p.symbol}</div>))}
             <div className="epic-title-container"><div className="epic-title">CHALLENGERHOUSE</div><div className="epic-subtitle">Inizializzazione Algoritmo...</div></div>
           </div>
@@ -328,7 +334,6 @@ export default function App() {
         </div>
       )}
 
-      {/* HEADER MIGLIORATO (Pulsante Blocco Raggruppato) */}
       <header className="header-layout">
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -339,8 +344,6 @@ export default function App() {
         </div>
 
         <div className="header-actions">
-          
-          {/* Gruppo Notifiche e Blocco Sistema (Restano sempre affiancati) */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div style={{ position: 'relative' }} ref={eventsRef}>
               <button onClick={toggleEventsMenu} className="tab-btn" disabled={!isConfigComplete} style={{ opacity: isConfigComplete ? 1 : 0.5, background: '#fff', border: '1px solid #e2e8f0', padding: '8px', borderRadius: '10px', cursor: isConfigComplete ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', position: 'relative' }}>
@@ -378,7 +381,6 @@ export default function App() {
         </div>
       </header>
 
-      {/* METRICHE */}
       <div className="metrics-grid">
         <div className="metric-card" style={{ background: activeTab === 'quote' ? 'linear-gradient(135deg, #2563eb, #1d4ed8)' : '#fff', color: activeTab === 'quote' ? '#fff' : '#0f172a', border: activeTab === 'quote' ? 'none' : '1px solid #e2e8f0' }}>
           {!isConfigComplete && <div className="lock-overlay"><Lock size={28} /></div>}
@@ -416,7 +418,6 @@ export default function App() {
       <div className="main-grid">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
-          {/* CONFIGURAZIONE FORM */}
           <div style={{ background: '#fff', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
             <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px', color: '#0f172a' }}><Home size={18} color="#2563eb" /> Configurazione Asset</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -451,7 +452,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* GRAFICO, SIMULATORE E WHATSAPP */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', width: '100%' }}>
           
           <div style={{ background: '#fff', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', width: '100%', overflow: 'hidden', position: 'relative' }}>
@@ -500,7 +500,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* GENERATORE WHATSAPP COLLASSABILE */}
           {activeTab === 'quote' && isConfigComplete && (
             <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
               <button onClick={() => setIsQuoteOpen(!isQuoteOpen)} className="tab-btn" style={{ width: '100%', padding: '20px 24px', border: 'none', background: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', textAlign: 'left' }}>
@@ -542,7 +541,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* TABELLA */}
       <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
         <button onClick={() => isConfigComplete && setIsTableOpen(!isTableOpen)} disabled={!isConfigComplete} className="tab-btn" style={{ opacity: isConfigComplete ? 1 : 0.6, width: '100%', padding: '20px 24px', border: 'none', background: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: isConfigComplete ? 'pointer' : 'not-allowed', textAlign: 'left' }}>
           <div><h2 style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Analisi Notte per Notte</h2></div>
