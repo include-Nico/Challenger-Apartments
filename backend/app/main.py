@@ -3,9 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from datetime import datetime
 
-app = FastAPI(title="ChallengerHouse API", version="2.0")
+app = FastAPI(title="ChallengerHouse API", version="2.2")
 
-# Abilitazione CORS per permettere le chiamate dal frontend su Vercel e in locale
+# Abilitazione CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -46,7 +46,7 @@ def get_neighbourhoods():
 
 
 # ---------------------------------------------------------
-# MOTORE DI CALCOLO PREZZI E MERCATO
+# MOTORE DI CALCOLO PREZZI E CALENDARIO EVENTI 2026/2027
 # ---------------------------------------------------------
 @app.get("/api/pricing/calculate")
 def calculate_pricing(
@@ -66,43 +66,78 @@ def calculate_pricing(
         raise HTTPException(status_code=400, detail="Formato data non valido. Usa YYYY-MM-DD")
 
     day_of_week = dt.strftime("%A")
-    is_weekend = dt.weekday() >= 4 # Venerdì e Sabato
+    is_weekend = dt.weekday() >= 4  # Venerdì, Sabato, Domenica (domenica è 6)
 
-    # Logica simulazione eventi e moltiplicatori basata sul mercato di Milano
     multiplier = 1.0
     active_event = None
 
-    # Esempio eventi ricorrenti o weekend
-    if is_weekend:
-        multiplier = 1.25
-        active_event = "Weekend Premium"
+    # 1. DIZIONARIO FESTIVITÀ NAZIONALI E PONTI MILANESI
+    holidays = {
+        "2026-01-01": ("Capodanno", 1.60),
+        "2026-01-06": ("Epifania", 1.30),
+        "2026-04-05": ("Pasqua", 1.50),
+        "2026-04-06": ("Pasquetta", 1.40),
+        "2026-04-25": ("Festa della Liberazione", 1.35),
+        "2026-05-01": ("Festa dei Lavoratori", 1.35),
+        "2026-06-02": ("Festa della Repubblica", 1.35),
+        "2026-08-15": ("Ferragosto", 1.40),
+        "2026-11-01": ("Ognissanti", 1.30),
+        "2026-12-07": ("Sant'Ambrogio", 1.70), # Alta stagione Milano
+        "2026-12-08": ("Immacolata", 1.60),
+        "2026-12-24": ("Vigilia di Natale", 1.40),
+        "2026-12-25": ("Natale", 1.50),
+        "2026-12-26": ("Santo Stefano", 1.40),
+        "2026-12-31": ("San Silvestro", 2.00)  # Picco massimo
+    }
 
-    # Eventi specifici di Milano simulati
-    if target_date in ["2026-04-16", "2026-04-17", "2026-04-18", "2026-04-19"]:
-        multiplier = 1.85
-        active_event = "Salone del Mobile"
-    elif target_date in ["2026-09-10", "2026-09-11", "2026-09-12", "2026-09-13"]:
+    # Controllo Festività (Priorità 1)
+    if target_date in holidays:
+        active_event = holidays[target_date][0]
+        multiplier = holidays[target_date][1]
+
+    # 2. GRANDI EVENTI FIERISTICI MILANO (Sovrascrivono le festività se si sovrappongono)
+    if "2026-04-14" <= target_date <= "2026-04-19":
+        active_event = "Salone del Mobile / Design Week"
+        multiplier = 2.20
+    elif "2026-02-24" <= target_date <= "2026-03-02":
+        active_event = "Milano Fashion Week (A/I)"
+        multiplier = 1.70
+    elif "2026-09-22" <= target_date <= "2026-09-28":
+        active_event = "Milano Fashion Week Donna"
+        multiplier = 1.80
+    elif "2026-09-04" <= target_date <= "2026-09-06":
+        active_event = "GP Monza"
         multiplier = 1.60
-        active_event = "GP Monza / Fashion Week"
+    elif "2026-11-05" <= target_date <= "2026-11-08":
+        active_event = "EICMA - Salone del Motociclo"
+        multiplier = 1.65
+
+    # 3. WEEKEND NORMALI (Se non c'è nessuna festa o evento)
+    if not active_event and is_weekend:
+        if dt.weekday() == 6: # La domenica sera di solito si sgonfia rispetto a ven/sab
+            multiplier = 1.10
+        else:
+            active_event = "Weekend Premium"
+            multiplier = 1.25
 
     # Calcolo tariffa pura Challenger
     calculated_price = base_price * multiplier
     
-    # Aggiunta extra ospiti se superano la soglia standard (es. > 2)
+    # Ricarico Ospiti Extra
     if guests > 2:
         extra_people = guests - 2
         calculated_price += (extra_people * extra_guest_fee)
 
-    # Aggiunta extra giornaliero (es. utenze)
+    # Costi Fissi Giornalieri
     calculated_price += daily_extra_fee
 
-    # Applicazione vincolo Floor Price (soglia minima)
+    # Applicazione del Floor (nessuna notte scende sotto questo prezzo)
     final_challenger_price = max(floor_price, calculated_price)
 
-    # Mediana di mercato simulata in base al quartiere
-    market_median = base_price * (1.1 if neighbourhood in ["Duomo", "Brera", "Garibaldi"] else 0.95)
-    if is_weekend:
-        market_median *= 1.2
+    # Dinamica di mercato simulata (Adegua la mediana in base al quartiere)
+    market_median = base_price * (1.15 if neighbourhood in ["Duomo", "Brera", "Navigli", "Garibaldi"] else 0.95)
+    if multiplier > 1.0:
+        market_median *= (multiplier - 0.1) # La mediana segue il trend, ma il nostro algoritmo ottimizza meglio
 
     delta = round(final_challenger_price - champion_price, 2)
 
