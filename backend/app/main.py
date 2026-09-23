@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from datetime import datetime, date
 
-app = FastAPI(title="ChallengerHouse API", version="3.0")
+app = FastAPI(title="ChallengerHouse API", version="4.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -42,7 +42,7 @@ def get_neighbourhoods():
     return {"neighbourhoods": MILANO_NILS}
 
 # ---------------------------------------------------------
-# IL NUOVO MOTORE DI CALCOLO 3.0 (TUTTI I FATTORI)
+# MOTORE DI CALCOLO 4.0 (TUTTI GLI EVENTI MILANESI 26/27)
 # ---------------------------------------------------------
 @app.get("/api/pricing/calculate")
 def calculate_pricing(
@@ -67,58 +67,78 @@ def calculate_pricing(
     multiplier = 1.0
     active_event = None
 
-    # --- FATTOR 1: LEAD TIME (Quanto manca al check-in) ---
+    # --- FATTOR 1: LEAD TIME ---
     today = date.today()
     lead_days = (dt.date() - today).days
     
     lead_multiplier = 1.0
     if 0 <= lead_days <= 3:
-        lead_multiplier = 0.90 # Sconto Last-Minute 10% per riempire i buchi
+        lead_multiplier = 0.90 
         if not active_event: active_event = "Sconto Last-Minute (-10%)"
     elif lead_days > 60:
-        lead_multiplier = 1.05 # Premium su prenotazioni anticipate sicure
+        lead_multiplier = 1.05 
 
-    # --- FATTORE 2: STAGIONALITÀ MENSILE MILANESE ---
+    # --- FATTORE 2: STAGIONALITÀ MENSILE ---
     month = dt.month
     season_multiplier = 1.0
     if month == 8:
-        season_multiplier = 0.85 # Agosto a Milano è deserto
+        season_multiplier = 0.85
         if not active_event: active_event = "Bassa Stagione (Agosto)"
     elif month in [4, 5, 9, 10]:
-        season_multiplier = 1.10 # Alta stagione primaverile/autunnale
+        season_multiplier = 1.10
 
     seasonal_base_price = base_price * season_multiplier
 
-    # --- FATTORE 3: EVENTI E FESTIVITÀ ---
-    holidays = {
-        "2026-01-01": ("Capodanno", 1.60), "2026-01-06": ("Epifania", 1.30),
-        "2026-04-05": ("Pasqua", 1.50), "2026-04-06": ("Pasquetta", 1.40),
-        "2026-04-25": ("Liberazione", 1.35), "2026-05-01": ("Primo Maggio", 1.35),
-        "2026-06-02": ("Repubblica", 1.35), "2026-08-15": ("Ferragosto", 1.40),
-        "2026-11-01": ("Ognissanti", 1.30), "2026-12-07": ("Sant'Ambrogio", 1.70),
-        "2026-12-08": ("Immacolata", 1.60), "2026-12-25": ("Natale", 1.50),
-        "2026-12-31": ("San Silvestro", 2.00)
+    # --- FATTORE 3: FESTIVITÀ FISSE ANNUALI E PASQUA ---
+    month_day = dt.strftime("%m-%d")
+    holidays_fixed = {
+        "01-01": ("Capodanno", 1.60), "01-06": ("Epifania", 1.30),
+        "04-25": ("Liberazione", 1.35), "05-01": ("Primo Maggio", 1.35),
+        "06-02": ("Repubblica", 1.35), "08-15": ("Ferragosto", 1.40),
+        "11-01": ("Ognissanti", 1.30), "12-07": ("Sant'Ambrogio", 1.70),
+        "12-08": ("Immacolata", 1.60), "12-24": ("Vigilia di Natale", 1.40),
+        "12-25": ("Natale", 1.50), "12-26": ("Santo Stefano", 1.40),
+        "12-31": ("San Silvestro", 2.00)
     }
 
-    if target_date in holidays:
-        active_event = holidays[target_date][0]
-        multiplier = holidays[target_date][1]
+    if month_day in holidays_fixed:
+        active_event = holidays_fixed[month_day][0]
+        multiplier = holidays_fixed[month_day][1]
 
-    if "2026-04-14" <= target_date <= "2026-04-19":
-        active_event = "Salone del Mobile"
-        multiplier = 2.20
-    elif "2026-09-22" <= target_date <= "2026-09-28":
-        active_event = "Milano Fashion Week Donna"
-        multiplier = 1.80
-    elif "2026-09-04" <= target_date <= "2026-09-06":
-        active_event = "GP Monza"
-        multiplier = 1.60
-    elif "2026-11-05" <= target_date <= "2026-11-08":
-        active_event = "EICMA"
-        multiplier = 1.65
+    if target_date in ["2026-04-05", "2027-03-28"]:
+        active_event, multiplier = "Pasqua", 1.50
+    elif target_date in ["2026-04-06", "2027-03-29"]:
+        active_event, multiplier = "Pasquetta", 1.40
+
+    # --- FATTORE 4: GRANDI EVENTI MILANO E FIERE (2026-2027) ---
+    events_ranges = [
+        # 2026
+        ("2026-04-21", "2026-04-26", "Salone del Mobile 2026", 2.20),
+        ("2026-06-19", "2026-06-23", "Fashion Week Uomo", 1.60),
+        ("2026-09-04", "2026-09-06", "GP Monza", 1.60),
+        ("2026-09-22", "2026-09-28", "Fashion Week Donna", 1.80),
+        ("2026-11-03", "2026-11-08", "EICMA 2026", 1.65),
+        ("2026-11-27", "2026-11-29", "Milano Games Week", 1.40),
+        ("2026-12-05", "2026-12-13", "Artigiano in Fiera", 1.50),
+        
+        # 2027
+        ("2027-01-15", "2027-01-19", "Fashion Week Uomo", 1.60),
+        ("2027-02-23", "2027-03-01", "Fashion Week Donna", 1.80),
+        ("2027-04-13", "2027-04-18", "Salone del Mobile 2027", 2.20),
+        ("2027-06-18", "2027-06-22", "Fashion Week Uomo", 1.60),
+        ("2027-09-03", "2027-09-05", "GP Monza", 1.60),
+        ("2027-09-21", "2027-09-27", "Fashion Week Donna", 1.80),
+        ("2027-11-09", "2027-11-14", "EICMA 2027", 1.65),
+    ]
+
+    for start_dt, end_dt, ev_name, ev_mult in events_ranges:
+        if start_dt <= target_date <= end_dt:
+            active_event = ev_name
+            multiplier = ev_mult
+            break
 
     if not active_event and is_weekend:
-        if dt.weekday() != 6:
+        if dt.weekday() != 6: # Esclude la domenica
             active_event = "Weekend Premium"
             multiplier = 1.20
 
