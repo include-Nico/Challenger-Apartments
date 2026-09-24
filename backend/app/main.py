@@ -4,20 +4,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from datetime import datetime, date, timedelta
 
-# --- INCOLLA QUI TRA LE VIRGOLETTE IL LINK CHE HAI COPIATO DA GOOGLE DRIVE ---
-GDRIVE_LINK = "https://docs.google.com/spreadsheets/d/1rM_9jpeS3LH24PspxD3XFii0j6Nt-f7AhVgMmei5Qig/edit?usp=sharing"
-
-# --- CONNESSIONE AL MOTORE REALE (CSV) ---
+# --- CONNESSIONE AL MOTORE REALE (CSV LOCALE) ---
 try:
     from engine import MilanChallengerEngine
-    market_engine = MilanChallengerEngine(gdrive_link=GDRIVE_LINK) 
+    market_engine = MilanChallengerEngine() 
     USE_REAL_DATA = True
-    print("✅ Motore dati connesso. Utilizzo dati reali (CSV).")
+    print("✅ Motore dati connesso. Utilizzo file listings.csv locale.")
 except Exception as e:
     USE_REAL_DATA = False
     print(f"⚠️ Impossibile caricare engine.py. Errore: {e}")
 
-app = FastAPI(title="ChallengerHouse API", version="6.0")
+app = FastAPI(title="ChallengerHouse API", version="7.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -30,6 +27,7 @@ app.add_middleware(
 class AuthRequest(BaseModel):
     pin: str
 
+# Hash SHA-256 del PIN
 SECRET_PIN_HASH = "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4"
 
 @app.post("/api/auth")
