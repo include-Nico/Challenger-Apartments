@@ -160,35 +160,45 @@ export default function App() {
     }
   };
 
+  // FETCH OTTIMIZZATA: 1 singola chiamata per tutto il range invece di N chiamate!
   const fetchPricing = async () => {
     if (!isAuthenticated || !isConfigComplete) { setRawPricingData([]); return; }
     setLoading(true); setServerError(false);
-    const results = [];
+    
     try {
+      let startStr = quoteDates.startDate;
+      let endStr = quoteDates.endDate;
+
       if (activeTab === 'listing') {
-        const today = new Date();
-        for (let i = 0; i < listingHorizonDays; i++) {
-          const d = new Date(today); d.setDate(today.getDate() + i);
-          const dateStr = d.toISOString().split('T')[0];
-          const url = `${API_BASE_URL}/api/pricing/calculate?target_date=${dateStr}&base_price=${apartment.basePrice}&floor_price=${apartment.floorPrice}&champion_price=${apartment.championPrice}&neighbourhood=${encodeURIComponent(apartment.neighbourhood)}&max_guests=${apartment.maxGuests}&extra_guest_fee=${apartment.extraGuestFee}&daily_extra_fee=${apartment.dailyExtraFee}&guests=${Math.max(1, apartment.guests)}`;
-          const res = await fetch(url);
-          if (!res.ok) throw new Error("Server Error");
-          results.push(await res.json());
-        }
-      } else {
-        const start = new Date(quoteDates.startDate); const end = new Date(quoteDates.endDate);
-        const cur = new Date(start);
-        while (cur < end) {
-          const dateStr = cur.toISOString().split('T')[0];
-          const url = `${API_BASE_URL}/api/pricing/calculate?target_date=${dateStr}&base_price=${apartment.basePrice}&floor_price=${apartment.floorPrice}&champion_price=${apartment.championPrice}&neighbourhood=${encodeURIComponent(apartment.neighbourhood)}&max_guests=${apartment.maxGuests}&extra_guest_fee=${apartment.extraGuestFee}&daily_extra_fee=${apartment.dailyExtraFee}&guests=${Math.max(1, apartment.guests)}`;
-          const res = await fetch(url);
-          if (!res.ok) throw new Error("Server Error");
-          results.push(await res.json());
-          cur.setDate(cur.getDate() + 1);
-        }
+        startStr = getTodayISO();
+        endStr = getFutureISO(listingHorizonDays - 1);
       }
-      setRawPricingData(results);
-    } catch (err) { setServerError(true); } finally { setLoading(false); }
+
+      const params = new URLSearchParams({
+        start_date: startStr,
+        end_date: endStr,
+        base_price: apartment.basePrice,
+        floor_price: apartment.floorPrice,
+        champion_price: apartment.championPrice,
+        neighbourhood: apartment.neighbourhood,
+        max_guests: apartment.maxGuests,
+        extra_guest_fee: apartment.extraGuestFee,
+        daily_extra_fee: apartment.dailyExtraFee,
+        guests: Math.max(1, apartment.guests)
+      });
+
+      const url = `${API_BASE_URL}/api/pricing/calculate-range?${params.toString()}`;
+      
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Server Error");
+      
+      const data = await res.json();
+      setRawPricingData(data.results || []);
+    } catch (err) { 
+      setServerError(true); 
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   useEffect(() => {
@@ -303,15 +313,12 @@ export default function App() {
           <div className="cyber-grid"></div><div className="supernova-flash"></div>
           <div className="splash-stage">
             <div className="shockwave sw-1"></div><div className="shockwave sw-2"></div><div className="shockwave sw-3"></div>
-            
-            {/* L'ICONA PWA NELLO SPLASH SCREEN */}
             <div className="epic-house-container">
               <div className="epic-house-glow"></div>
               <div className="epic-house-core">
                 <img src="/casa_soldi_icon.png" alt="Logo Challenger" style={{ width: '80%', height: '80%', objectFit: 'contain', borderRadius: '12px' }} />
               </div>
             </div>
-
             {explosionParticles.map((p, i) => (<div key={i} className="epic-particle" style={{ '--tx': p.tx, '--ty': p.ty, '--rX': p.rX, '--rY': p.rY, '--rZ': p.rZ, '--delay': p.delay, '--scale': p.scale }}>{p.symbol}</div>))}
             <div className="epic-title-container"><div className="epic-title">CHALLENGERHOUSE</div><div className="epic-subtitle">Inizializzazione Algoritmo...</div></div>
           </div>
@@ -336,8 +343,8 @@ export default function App() {
 
       <header className="header-layout">
         <div>
-          {/* L'ICONA PERSONALIZZATA AL POSTO DELLA CASETTA ACCANTO AL TITOLO */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {/* NUOVO LOGO ACCANTO AL TITOLO */}
             <img src="/casa_soldi_icon.png" alt="ChallengerHouse Logo" style={{ width: '44px', height: '44px', borderRadius: '12px', objectFit: 'cover', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }} />
             <h1 style={{ fontSize: '26px', fontWeight: '800', letterSpacing: '-0.5px', color: '#0f172a', margin: 0 }}>ChallengerHouse</h1>
           </div>
@@ -365,7 +372,6 @@ export default function App() {
                 </div>
               )}
             </div>
-
             <button onClick={() => { setIsAuthenticated(false); setPinInput(''); }} style={{ background: '#fef2f2', border: '1px solid #fecaca', padding: '8px', borderRadius: '10px', cursor: 'pointer', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Blocca App">
               <Unlock size={20} />
             </button>
