@@ -1,7 +1,6 @@
 import pandas as pd
 import os
-import requests
-import re
+import gdown
 
 class MilanChallengerEngine:
     def __init__(self, csv_path="listings.csv", gdrive_link=None):
@@ -10,30 +9,20 @@ class MilanChallengerEngine:
         self.df = None
         self._load_data()
 
-    def _get_direct_download_url(self):
-        """Estrae l'ID dal link di Google Drive e crea un link di download diretto."""
-        if not self.gdrive_link:
-            return None
-        match = re.search(r'/d/([a-zA-Z0-9_-]+)', self.gdrive_link)
-        if match:
-            return f"https://drive.google.com/uc?export=download&id={match.group(1)}"
-        return self.gdrive_link
-
     def _download_csv(self):
-        direct_url = self._get_direct_download_url()
-        if not direct_url:
-            print("⚠️ Nessun URL fornito per scaricare il CSV.")
+        if not self.gdrive_link or self.gdrive_link == "https://docs.google.com/spreadsheets/d/1rM_9jpeS3LH24PspxD3XFii0j6Nt-f7AhVgMmei5Qig/edit?usp=sharing":
+            print("⚠️ Nessun URL valido fornito per scaricare il CSV.")
             return False
             
-        print("⬇️ Download del dataset di mercato in corso (68MB). Attendere...")
+        print("⬇️ Download del dataset da Google Drive in corso (bypasso blocco antivirus)...")
         try:
-            response = requests.get(direct_url, stream=True)
-            response.raise_for_status()
-            with open(self.csv_path, "wb") as f:
-                for chunk in response.iter_content(chunk_size=8192):
-                    f.write(chunk)
-            print("✅ Download del dataset completato!")
-            return True
+            # gdown.download con fuzzy=True capisce da solo qualsiasi link di Google Drive
+            gdown.download(url=self.gdrive_link, output=self.csv_path, quiet=False, fuzzy=True)
+            
+            if os.path.exists(self.csv_path):
+                print("✅ Download del dataset completato!")
+                return True
+            return False
         except Exception as e:
             print(f"❌ Errore durante il download da Google Drive: {e}")
             return False
@@ -47,11 +36,14 @@ class MilanChallengerEngine:
                 return
 
         try:
+            # Carica le colonne necessarie
             self.df = pd.read_csv(self.csv_path, usecols=['neighbourhood_cleansed', 'price', 'accommodates'])
+            
+            # Pulisce i prezzi (es. da "$100.00" a 100.0)
             if self.df['price'].dtype == object:
                 self.df['price'] = self.df['price'].replace({'\$': '', ',': ''}, regex=True).astype(float)
             
-            # Pulisce eventuali righe vuote
+            # Rimuove righe non valide
             self.df = self.df.dropna(subset=['neighbourhood_cleansed', 'price'])
             print(f"✅ Dataset caricato con successo: {len(self.df)} annunci analizzabili.")
         except Exception as e:
@@ -62,10 +54,10 @@ class MilanChallengerEngine:
         """Restituisce la lista esatta e univoca dei quartieri letti dal CSV."""
         if self.df is not None and not self.df.empty:
             return sorted(self.df['neighbourhood_cleansed'].unique().tolist())
-        return ["Nessun dato CSV disponibile - Controlla il link Google Drive"]
+        return ["Nessun dato CSV disponibile - Controlla i Log"]
 
     def get_median(self, neighbourhood: str, max_guests: int = None) -> float:
-        """Calcola la mediana esatta incrociando Quartiere e (se possibile) Posti letto."""
+        """Calcola la mediana esatta incrociando Quartiere e Posti letto."""
         if self.df is None or self.df.empty:
             raise ValueError("Dataset non disponibile")
 
@@ -73,9 +65,7 @@ class MilanChallengerEngine:
         filtered_df = self.df[mask]
 
         if max_guests is not None:
-            # Prova a filtrare anche per capienza
             strict_filter = filtered_df[filtered_df['accommodates'] == max_guests]
-            # Se trova abbastanza case usa questo, altrimenti usa la mediana generale del quartiere
             if not strict_filter.empty:
                 filtered_df = strict_filter
 
