@@ -15,9 +15,9 @@ try:
     print("✅ Motore dati connesso. Utilizzo dati reali (CSV).")
 except Exception as e:
     USE_REAL_DATA = False
-    print(f"⚠️ Impossibile caricare engine.py. Utilizzo fallback sintetico. Errore: {e}")
+    print(f"⚠️ Impossibile caricare engine.py. Errore: {e}")
 
-app = FastAPI(title="ChallengerHouse API", version="5.2")
+app = FastAPI(title="ChallengerHouse API", version="6.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -39,33 +39,12 @@ def verify_pin(request: AuthRequest):
         return {"status": "ok", "message": "Accesso consentito"}
     raise HTTPException(status_code=401, detail="PIN errato")
 
-MILANO_NILS = [
-    "Duomo", "Brera", "Gioia", "Centrale", "Loreto", "Porta Venezia", 
-    "Guastalla", "Navigli", "Ticinese", "Tortona", "Porta Romana", 
-    "Buenos Aires", "Città Studi", "Lambrate", "Bicocca", "Niguarda", 
-    "Isola", "Garibaldi", "Sempione", "CityLife", "San Siro", "Fiera"
-]
-
+# --- LISTA QUARTIERI ESTRATTA DIRETTAMENTE DAL CSV ---
 @app.get("/api/neighbourhoods")
 def get_neighbourhoods():
-    return {"neighbourhoods": MILANO_NILS}
-
-# --- FUNZIONE: MERCATO INDIPENDENTE (FALLBACK) ---
-def get_synthetic_market_median(neighbourhood: str, max_guests: int) -> float:
-    """Restituisce una mediana di mercato fissa basata su dati realistici di Milano, NON sui dati utente."""
-    premium = {"Duomo": 150, "Brera": 145, "Navigli": 130, "Garibaldi": 135, "CityLife": 130}
-    high = {"Centrale": 110, "Porta Venezia": 115, "Ticinese": 115, "Tortona": 120, "Porta Romana": 115, "Sempione": 110, "Fiera": 105, "Gioia": 110}
-    
-    if neighbourhood in premium:
-        base_m = premium[neighbourhood]
-    elif neighbourhood in high:
-        base_m = high[neighbourhood]
-    else:
-        base_m = 90 # Quartieri residenziali/periferici
-        
-    capacity_premium = (max_guests - 2) * 15 if max_guests > 2 else 0
-    return float(base_m + capacity_premium)
-
+    if USE_REAL_DATA and market_engine:
+        return {"neighbourhoods": market_engine.get_all_neighbourhoods()}
+    return {"neighbourhoods": ["Nessun dato CSV disponibile"]}
 
 def calculate_single_night(target_date_str, base_price, floor_price, champion_price, neighbourhood, max_guests, extra_guest_fee, daily_extra_fee, guests):
     dt = datetime.strptime(target_date_str, "%Y-%m-%d")
@@ -153,18 +132,17 @@ def calculate_single_night(target_date_str, base_price, floor_price, champion_pr
     calculated_price += daily_extra_fee
     final_challenger_price = max(floor_price, calculated_price)
 
-    # --- CALCOLO MERCATO (REALE O SINTETICO) ---
+    # --- CALCOLO MERCATO (SOLO DATO REALE CSV) ---
     market_median = 0
     if USE_REAL_DATA:
         try:
             real_val = market_engine.get_median(neighbourhood, max_guests) 
             market_median = float(real_val)
         except Exception:
-            market_median = get_synthetic_market_median(neighbourhood, max_guests)
-    else:
-        market_median = get_synthetic_market_median(neighbourhood, max_guests)
+            market_median = 0 # Nessuna invenzione, se non c'è il dato resta 0.
 
-    if multiplier > 1.0:
+    # Eventi/Festività impattano anche la mediana del mercato
+    if multiplier > 1.0 and market_median > 0:
         market_median *= (multiplier - 0.1)
 
     delta = round(final_challenger_price - champion_price, 2)
@@ -175,7 +153,7 @@ def calculate_single_night(target_date_str, base_price, floor_price, champion_pr
         "challenger_price": round(final_challenger_price, 2),
         "champion_price": round(champion_price, 2),
         "market_median": round(market_median, 2),
-        "market_sample_count": "Reale (CSV)" if USE_REAL_DATA else "Sintetico",
+        "market_sample_count": "Reale (CSV)" if USE_REAL_DATA and market_median > 0 else "Nessun Dato",
         "active_event": active_event,
         "multiplier": round(total_multiplier, 2),
         "delta": delta
