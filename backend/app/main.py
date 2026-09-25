@@ -14,7 +14,7 @@ except Exception as e:
     USE_REAL_DATA = False
     print(f"⚠️ Impossibile caricare engine.py. Errore: {e}")
 
-app = FastAPI(title="ChallengerHouse API", version="8.0")
+app = FastAPI(title="ChallengerHouse API", version="8.1")
 
 app.add_middleware(
     CORSMiddleware,
@@ -42,15 +42,18 @@ def get_neighbourhoods():
         return {"neighbourhoods": market_engine.get_all_neighbourhoods()}
     return {"neighbourhoods": ["Nessun dato CSV disponibile"]}
 
-# --- SCUDO DI EMERGENZA ---
+# --- SCUDO DI EMERGENZA AGGIORNATO ---
 def get_synthetic_market_median(neighbourhood: str, max_guests: int) -> float:
-    premium = {"Duomo": 150, "Brera": 145, "Garibaldi": 135, "Navigli": 130, "CityLife": 130}
-    high = {"Centrale": 110, "Porta Venezia": 115, "Ticinese": 115, "Tortona": 120, "Porta Romana": 115}
-    base_m = 85
+    premium = {"Duomo": 205, "Brera": 195, "Garibaldi": 180, "Navigli": 160, "CityLife": 165}
+    high = {"Centrale": 130, "Porta Venezia": 140, "Ticinese": 145, "Tortona": 145, "Porta Romana": 140, "Sempione": 130, "Fiera": 125, "Gioia": 130}
+    
+    base_m = 100 # Base periferica alzata
+    
     for k, v in premium.items():
         if k.lower() in neighbourhood.lower(): base_m = v
     for k, v in high.items():
         if k.lower() in neighbourhood.lower(): base_m = v
+        
     capacity_premium = (max_guests - 2) * 15 if max_guests > 2 else 0
     return float(base_m + capacity_premium)
 
@@ -145,7 +148,6 @@ def calculate_single_night(target_date_str, base_price, floor_price, champion_pr
             real_val = market_engine.get_median(neighbourhood, max_guests) 
             market_median = float(real_val)
         except Exception as e:
-            # IN CASO DI ERRORE: Usa i dati finti e stampa l'errore per il debug!
             market_median = get_synthetic_market_median(neighbourhood, max_guests)
             debug_msg = f"Err: {e}"
     else:
