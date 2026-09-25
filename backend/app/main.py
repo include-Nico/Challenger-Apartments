@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from datetime import datetime, date, timedelta
 
-# --- CONNESSIONE AL MOTORE REALE (CSV LOCALE) ---
+# --- CONNESSIONE AL MOTORE REALE ---
 try:
     from app.engine import MilanChallengerEngine
     market_engine = MilanChallengerEngine() 
@@ -14,7 +14,7 @@ except Exception as e:
     USE_REAL_DATA = False
     print(f"⚠️ Impossibile caricare engine.py. Errore: {e}")
 
-app = FastAPI(title="ChallengerHouse API", version="7.0")
+app = FastAPI(title="ChallengerHouse API", version="8.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -27,7 +27,6 @@ app.add_middleware(
 class AuthRequest(BaseModel):
     pin: str
 
-# Hash SHA-256 del PIN
 SECRET_PIN_HASH = "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4"
 
 @app.post("/api/auth")
@@ -37,21 +36,30 @@ def verify_pin(request: AuthRequest):
         return {"status": "ok", "message": "Accesso consentito"}
     raise HTTPException(status_code=401, detail="PIN errato")
 
-# --- LISTA QUARTIERI ESTRATTA DIRETTAMENTE DAL CSV ---
 @app.get("/api/neighbourhoods")
 def get_neighbourhoods():
     if USE_REAL_DATA and market_engine:
         return {"neighbourhoods": market_engine.get_all_neighbourhoods()}
     return {"neighbourhoods": ["Nessun dato CSV disponibile"]}
 
+# --- SCUDO DI EMERGENZA ---
+def get_synthetic_market_median(neighbourhood: str, max_guests: int) -> float:
+    premium = {"Duomo": 150, "Brera": 145, "Garibaldi": 135, "Navigli": 130, "CityLife": 130}
+    high = {"Centrale": 110, "Porta Venezia": 115, "Ticinese": 115, "Tortona": 120, "Porta Romana": 115}
+    base_m = 85
+    for k, v in premium.items():
+        if k.lower() in neighbourhood.lower(): base_m = v
+    for k, v in high.items():
+        if k.lower() in neighbourhood.lower(): base_m = v
+    capacity_premium = (max_guests - 2) * 15 if max_guests > 2 else 0
+    return float(base_m + capacity_premium)
+
 def calculate_single_night(target_date_str, base_price, floor_price, champion_price, neighbourhood, max_guests, extra_guest_fee, daily_extra_fee, guests):
     dt = datetime.strptime(target_date_str, "%Y-%m-%d")
     day_of_week = dt.strftime("%A")
     is_weekend = dt.weekday() >= 4 
-
     multiplier = 1.0
     active_event = None
-
     today = date.today()
     lead_days = (dt.date() - today).days
     
@@ -71,7 +79,6 @@ def calculate_single_night(target_date_str, base_price, floor_price, champion_pr
         season_multiplier = 1.10
 
     seasonal_base_price = base_price * season_multiplier
-
     month_day = dt.strftime("%m-%d")
     holidays_fixed = {
         "01-01": ("Capodanno", 1.60), "01-06": ("Epifania", 1.30),
@@ -130,16 +137,21 @@ def calculate_single_night(target_date_str, base_price, floor_price, champion_pr
     calculated_price += daily_extra_fee
     final_challenger_price = max(floor_price, calculated_price)
 
-    # --- CALCOLO MERCATO (SOLO DATO REALE CSV) ---
+    # --- CALCOLO MERCATO SUPER-SICURO ---
     market_median = 0
+    debug_msg = "Reale (CSV)"
     if USE_REAL_DATA:
         try:
             real_val = market_engine.get_median(neighbourhood, max_guests) 
             market_median = float(real_val)
-        except Exception:
-            market_median = 0 # Nessuna invenzione, se non c'è il dato resta 0.
+        except Exception as e:
+            # IN CASO DI ERRORE: Usa i dati finti e stampa l'errore per il debug!
+            market_median = get_synthetic_market_median(neighbourhood, max_guests)
+            debug_msg = f"Err: {e}"
+    else:
+        market_median = get_synthetic_market_median(neighbourhood, max_guests)
+        debug_msg = "Sintetico"
 
-    # Eventi/Festività impattano anche la mediana del mercato
     if multiplier > 1.0 and market_median > 0:
         market_median *= (multiplier - 0.1)
 
@@ -151,7 +163,7 @@ def calculate_single_night(target_date_str, base_price, floor_price, champion_pr
         "challenger_price": round(final_challenger_price, 2),
         "champion_price": round(champion_price, 2),
         "market_median": round(market_median, 2),
-        "market_sample_count": "Reale (CSV)" if USE_REAL_DATA and market_median > 0 else "Nessun Dato",
+        "market_sample_count": debug_msg,
         "active_event": active_event,
         "multiplier": round(total_multiplier, 2),
         "delta": delta
