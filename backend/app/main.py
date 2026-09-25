@@ -6,7 +6,7 @@ from datetime import datetime, date, timedelta
 
 # --- CONNESSIONE AL MOTORE REALE (CSV LOCALE) ---
 try:
-    from engine import MilanChallengerEngine
+    from app.engine import MilanChallengerEngine
     market_engine = MilanChallengerEngine() 
     USE_REAL_DATA = True
     print("✅ Motore dati connesso. Utilizzo file listings.csv locale.")
