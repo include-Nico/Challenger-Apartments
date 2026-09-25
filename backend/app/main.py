@@ -14,7 +14,7 @@ except Exception as e:
     USE_REAL_DATA = False
     print(f"⚠️ Impossibile caricare engine.py. Errore: {e}")
 
-app = FastAPI(title="ChallengerHouse API", version="8.1")
+app = FastAPI(title="ChallengerHouse API", version="9.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -46,8 +46,7 @@ def get_neighbourhoods():
 def get_synthetic_market_median(neighbourhood: str, max_guests: int) -> float:
     premium = {"Duomo": 205, "Brera": 195, "Garibaldi": 180, "Navigli": 160, "CityLife": 165}
     high = {"Centrale": 130, "Porta Venezia": 140, "Ticinese": 145, "Tortona": 145, "Porta Romana": 140, "Sempione": 130, "Fiera": 125, "Gioia": 130}
-    
-    base_m = 100 # Base periferica alzata
+    base_m = 100 
     
     for k, v in premium.items():
         if k.lower() in neighbourhood.lower(): base_m = v
@@ -131,16 +130,11 @@ def calculate_single_night(target_date_str, base_price, floor_price, champion_pr
             multiplier = 1.20
 
     total_multiplier = multiplier * lead_multiplier
-    calculated_price = seasonal_base_price * total_multiplier
     
-    if guests > 2:
-        extra_people = guests - 2
-        calculated_price += (extra_people * extra_guest_fee)
+    # 1. Prezzo puro in base alla tua strategia (Stagionalità + Eventi)
+    user_raw_price = seasonal_base_price * total_multiplier
 
-    calculated_price += daily_extra_fee
-    final_challenger_price = max(floor_price, calculated_price)
-
-    # --- CALCOLO MERCATO SUPER-SICURO ---
+    # 2. Ottieni la mediana del Mercato Reale
     market_median = 0
     debug_msg = "Reale (CSV)"
     if USE_REAL_DATA:
@@ -154,8 +148,25 @@ def calculate_single_night(target_date_str, base_price, floor_price, champion_pr
         market_median = get_synthetic_market_median(neighbourhood, max_guests)
         debug_msg = "Sintetico"
 
+    # Anche il mercato si alza durante gli eventi
     if multiplier > 1.0 and market_median > 0:
         market_median *= (multiplier - 0.1)
+
+    # 3. GRAVITÀ DI MERCATO: Il prezzo suggerito è una fusione (50/50) tra le tue regole e il mercato locale
+    if market_median > 0:
+        blended_price = (user_raw_price + market_median) / 2
+    else:
+        blended_price = user_raw_price
+    
+    # 4. Aggiungi i costi extra fissi (ospiti aggiuntivi e fee giornaliera)
+    if guests > 2:
+        extra_people = guests - 2
+        blended_price += (extra_people * extra_guest_fee)
+
+    blended_price += daily_extra_fee
+    
+    # 5. Applica il pavimento (Floor Price) di sicurezza
+    final_challenger_price = max(floor_price, blended_price)
 
     delta = round(final_challenger_price - champion_price, 2)
 
