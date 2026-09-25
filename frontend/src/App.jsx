@@ -237,6 +237,71 @@ export default function App() {
   useEffect(() => { if (upcomingEvents.length > 0) setHasViewedEvents(false); }, [upcomingEvents.length]);
   const toggleEventsMenu = () => { setIsEventsOpen(!isEventsOpen); if (!isEventsOpen) setHasViewedEvents(true); };
 
+  // --- NUOVA FUNZIONE: INDICATORE DI STRATEGIA (Aggiunta qui senza toccare il resto) ---
+  const renderStrategyIndicator = () => {
+    if (!pricingData || pricingData.length === 0) return null;
+
+    let totalChallenger = 0;
+    let totalMarket = 0;
+    let validMarketDays = 0;
+
+    pricingData.forEach(day => {
+      totalChallenger += day.eff_challenger;
+      if (day.market_median > 0) {
+        totalMarket += day.market_median;
+        validMarketDays++;
+      }
+    });
+
+    if (validMarketDays === 0) return null;
+
+    const avgChallenger = totalChallenger / pricingData.length;
+    const avgMarket = totalMarket / validMarketDays;
+    const diffPercent = ((avgChallenger - avgMarket) / avgMarket) * 100;
+    const diffFormatted = Math.abs(diffPercent).toFixed(1);
+
+    let boxBg = "#f8fafc";
+    let boxBorder = "#cbd5e1";
+    let titleColor = "#0f172a";
+    let icon = "⚖️";
+    let title = "Strategia Allineata";
+    let message = `Sei in linea col mercato (diff. ${diffFormatted}%). Ottimo bilanciamento tra prezzo e probabilità di occupazione.`;
+
+    if (diffPercent > 5) {
+      boxBg = "#faf5ff";
+      boxBorder = "#d8b4fe";
+      titleColor = "#7e22ce";
+      icon = "👑";
+      title = "Strategia Premium";
+      message = `Sei il ${diffFormatted}% sopra la media del mercato. Punta sulla qualità, sulle foto e sui servizi per giustificare il prezzo.`;
+    } else if (diffPercent < -5) {
+      boxBg = "#f0fdf4";
+      boxBorder = "#86efac";
+      titleColor = "#15803d";
+      icon = "🚀";
+      title = "Strategia Aggressiva";
+      message = `Sei il ${diffFormatted}% sotto il mercato. Puntiamo al tutto esaurito rapido, massimizzando l'occupazione mensile.`;
+    }
+
+    return (
+      <div style={{ 
+        marginTop: '20px', 
+        padding: '16px', 
+        borderLeft: `4px solid ${boxBorder}`, 
+        backgroundColor: boxBg,
+        borderRadius: '8px',
+      }}>
+        <h3 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: '800', color: titleColor }}>
+          {icon} {title}
+        </h3>
+        <p style={{ margin: 0, fontSize: '13px', color: '#475569', fontWeight: '500' }}>
+          {message}
+        </p>
+      </div>
+    );
+  };
+  // ----------------------------------------------------------------------------------
+
   const quoteText = `👋 Ciao!\nEcco il preventivo per il tuo soggiorno a *${apartment.name || 'Milano'}*.\n\n📅 Date: dal ${quoteDates.startDate} al ${quoteDates.endDate}\n👥 Ospiti: ${apartment.guests}\n🌙 Notti totali: ${totalDays}\n\n💰 *Totale: €${totalChallengerStay.toFixed(2)}*\n_(Tutte le spese e pulizie incluse)_\n\nFammi sapere se vuoi procedere con la prenotazione! 🏡`;
   const copyToClipboard = () => { navigator.clipboard.writeText(quoteText); alert("Preventivo copiato negli appunti!"); };
   const openWhatsApp = () => { window.open(`https://wa.me/?text=${encodeURIComponent(quoteText)}`, '_blank'); };
@@ -273,7 +338,7 @@ export default function App() {
       @keyframes textEntrance { 20% { opacity: 1; transform: translateY(0); filter: blur(0px); } 80% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-20px); } }
       .metric-card { position: relative; background: #fff; padding: 24px; border-radius: 16px; border: 1px solid #e2e8f0; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.04); overflow: hidden; } .metric-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08); }
       .styled-input, select.styled-input { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; background-color: #ffffff; color: #0f172a; font-family: inherit; font-size: 14px; margin-top: 6px; } .styled-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); outline: none; } .helper-text { display: block; font-size: 11px; color: #64748b; margin-top: 5px; font-weight: 500; }
-      .tab-btn { transition: all 0.2s; } .tab-btn:hover:not(.active-tab):not(:disabled) { background-color: #f1f5f9 !important; } .table-row { transition: background-color 0.15s; } .table-row:hover { background-color: #f8fafc !important; } .event-row:hover { background-color: #dbeafe !important; }
+      .tab-btn { transition: all 0.2s; } .tab-btn:hover:not(.active-tab):not(:disabled) { background-color: #f1f5f9 !important; } .table-row { transition: background-color 0.15s; } .table-row:hover { background-color: #f8fafc !important; }
       .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; } .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 8px; } .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
     `}</style>
   );
@@ -504,6 +569,10 @@ export default function App() {
                   </ResponsiveContainer>
                 )}
               </div>
+              
+              {/* --- AGGIUNTA INDICATORE DI STRATEGIA --- */}
+              {renderStrategyIndicator()}
+
             </div>
           </div>
 
