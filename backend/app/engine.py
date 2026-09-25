@@ -18,12 +18,16 @@ class MilanChallengerEngine:
         try:
             self.df = pd.read_csv(self.csv_path, usecols=['neighbourhood_cleansed', 'price', 'accommodates'], low_memory=False)
             
-            # Pulizia ESTREMA del prezzo: rimuove dollari, virgole, spazi, lasciando solo numeri e il punto decimale
+            # Pulisce i prezzi da valute e virgole
             self.df['price'] = self.df['price'].astype(str).str.replace(r'[^\d\.]', '', regex=True)
             self.df['price'] = pd.to_numeric(self.df['price'], errors='coerce')
             
+            # --- FILTRO ANTI-FOLLIA AGGIORNATO ---
+            # Tiene tutto ciò che costa tra i 20€ e i 2500€ a notte
+            self.df = self.df[(self.df['price'] >= 20) & (self.df['price'] <= 2500)]
+            
             self.df = self.df.dropna(subset=['neighbourhood_cleansed', 'price'])
-            print(f"✅ CSV caricato: {len(self.df)} annunci validi.")
+            print(f"✅ CSV caricato e RIPULITO: {len(self.df)} annunci realistici pronti.")
         except Exception as e:
             print(f"💥 Errore lettura CSV: {e}")
             self.df = None
@@ -44,7 +48,7 @@ class MilanChallengerEngine:
         mask = df_neigh == neigh_clean
         filtered_df = self.df[mask]
 
-        # 2. Ricerca Parziale (se l'esatta fallisce per qualche strana codifica)
+        # 2. Ricerca Parziale
         if filtered_df.empty:
             mask = df_neigh.str.contains(neigh_clean, regex=False, na=False)
             filtered_df = self.df[mask]
@@ -52,15 +56,21 @@ class MilanChallengerEngine:
         if filtered_df.empty:
             raise ValueError(f"Quartiere non trovato: {neighbourhood}")
 
-        # Filtro Capacità
+        # --- FILTRO CAPIENZA INTELLIGENTE ---
         if max_guests is not None:
             self.df['accommodates'] = pd.to_numeric(self.df['accommodates'], errors='coerce')
-            strict_filter = filtered_df[filtered_df['accommodates'] == float(max_guests)]
-            if not strict_filter.empty:
-                filtered_df = strict_filter
+            
+            # Cerca un range sensato (es. cerchi 4? Prende 3, 4 e 5)
+            guest_mask = (filtered_df['accommodates'] >= max_guests - 1) & (filtered_df['accommodates'] <= max_guests + 1)
+            smart_filter = filtered_df[guest_mask]
+            
+            # Lo applica SOLO SE ci sono almeno 5 case per fare statistica, altrimenti usa l'intero quartiere
+            if len(smart_filter) >= 5:
+                filtered_df = smart_filter
 
         median_val = filtered_df['price'].median()
+        
         if pd.isna(median_val):
-            raise ValueError("Tutti i prezzi sono NaN")
+            raise ValueError("Prezzi invalidi nel quartiere")
             
         return float(median_val)
