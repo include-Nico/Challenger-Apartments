@@ -21,6 +21,21 @@ const loadSavedState = (key, defaultValue) => {
   }
 };
 
+// Etichetta di campo con icona "i" e tooltip esplicativo al passaggio del mouse/tocco.
+// Serve a spiegare all'host cosa fa ogni campo, senza affollare il form di testo fisso.
+const FieldLabel = ({ text, tip, icon: Icon, iconColor, color = '#334155' }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+    {Icon && <Icon size={14} color={iconColor || '#64748b'} />}
+    <label style={{ fontWeight: '700', fontSize: '12px', color }}>{text}</label>
+    {tip && (
+      <span className="field-info" tabIndex={0}>
+        <Info size={13} color="#94a3b8" />
+        <span className="field-tooltip">{tip}</span>
+      </span>
+    )}
+  </div>
+);
+
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => loadSavedState('challenger_auth', false));
   const [pinInput, setPinInput] = useState('');
@@ -338,6 +353,10 @@ export default function App() {
       @keyframes textEntrance { 20% { opacity: 1; transform: translateY(0); filter: blur(0px); } 80% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-20px); } }
       .metric-card { position: relative; background: #fff; padding: 24px; border-radius: 16px; border: 1px solid #e2e8f0; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.04); overflow: hidden; } .metric-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08); }
       .styled-input, select.styled-input { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; background-color: #ffffff; color: #0f172a; font-family: inherit; font-size: 14px; margin-top: 6px; } .styled-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); outline: none; } .helper-text { display: block; font-size: 11px; color: #64748b; margin-top: 5px; font-weight: 500; }
+      .field-info { position: relative; display: inline-flex; align-items: center; cursor: help; }
+      .field-info .field-tooltip { visibility: hidden; opacity: 0; position: absolute; bottom: 140%; left: 50%; transform: translateX(-50%) translateY(4px); background: #0f172a; color: #f1f5f9; padding: 9px 11px; border-radius: 8px; font-size: 11px; font-weight: 500; line-height: 1.45; width: 220px; text-align: left; box-shadow: 0 10px 20px rgba(0,0,0,0.25); z-index: 70; transition: opacity 0.15s ease, transform 0.15s ease; pointer-events: none; }
+      .field-info:hover .field-tooltip, .field-info:focus-within .field-tooltip { visibility: visible; opacity: 1; transform: translateX(-50%) translateY(0); }
+      @media (max-width: 768px) { .field-info .field-tooltip { left: 0; transform: translateX(0) translateY(4px); width: 190px; } .field-info:hover .field-tooltip, .field-info:focus-within .field-tooltip { transform: translateX(0) translateY(0); } }
       .tab-btn { transition: all 0.2s; } .tab-btn:hover:not(.active-tab):not(:disabled) { background-color: #f1f5f9 !important; } .table-row { transition: background-color 0.15s; } .table-row:hover { background-color: #f8fafc !important; }
       .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; } .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 8px; } .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
     `}</style>
@@ -494,7 +513,7 @@ export default function App() {
             <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px', color: '#0f172a' }}><Home size={18} color="#2563eb" /> Configurazione Asset</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               
-              <div><label style={{ fontWeight: '700', fontSize: '13px', color: '#334155' }}>Nome Immobile (Per Preventivo)</label><input type="text" className="styled-input" value={apartment.name} onChange={(e) => setApartment(prev => ({ ...prev, name: e.target.value }))} placeholder="Es. Loft Navigli" /></div>
+              <div><FieldLabel text="Nome Immobile (Per Preventivo)" tip="Il nome che comparirà nel preventivo inviato via WhatsApp al cliente. È solo per riconoscimento: non influisce in alcun modo sul calcolo del prezzo." /><input type="text" className="styled-input" value={apartment.name} onChange={(e) => setApartment(prev => ({ ...prev, name: e.target.value }))} placeholder="Es. Loft Navigli" /></div>
 
               {activeTab === 'listing' ? (
                 <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0' }}><label style={{ fontWeight: '700', fontSize: '13px', color: '#334155' }}>Orizzonte Calendario</label><select className="styled-input" value={listingHorizonDays} onChange={(e) => setListingHorizonDays(Number(e.target.value))}><option value={7}>Prossimi 7 giorni</option><option value={14}>Prossimi 14 giorni</option><option value={30}>Prossimi 30 giorni</option><option value={60}>Prossimi 60 giorni</option><option value={90}>Prossimi 90 giorni</option></select></div>
@@ -502,10 +521,10 @@ export default function App() {
                 <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0' }}><div className="date-inputs"><div><label style={{ fontWeight: '700', fontSize: '13px', color: '#334155' }}>Check-in</label><input type="date" className="styled-input" value={quoteDates.startDate} onChange={(e) => setQuoteDates({ ...quoteDates, startDate: e.target.value })} /></div><div><label style={{ fontWeight: '700', fontSize: '13px', color: '#334155' }}>Check-out</label><input type="date" className="styled-input" value={quoteDates.endDate} min={quoteDates.startDate} onChange={(e) => setQuoteDates({ ...quoteDates, endDate: e.target.value })} /></div></div></div>
               )}
 
-              <div style={{ background: '#f0fdf4', padding: '14px', borderRadius: '12px', border: '1px solid #bbf7d0' }}><div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Users size={16} color="#16a34a" /><label style={{ fontWeight: '700', fontSize: '13px', color: '#166534' }}>Ospiti Soggiorno</label></div><input type="number" className="styled-input" min={1} value={apartment.guests} onChange={(e) => handleNumChange('guests', e.target.value)} placeholder="Es. 2" /></div>
+              <div style={{ background: '#f0fdf4', padding: '14px', borderRadius: '12px', border: '1px solid #bbf7d0' }}><FieldLabel text="Ospiti Soggiorno" icon={Users} iconColor="#16a34a" color="#166534" tip="Quante persone soggiorneranno in questa prenotazione specifica. Se superano 2, scatta la 'Fee Ospite Extra' per ciascun ospite in più." /><input type="number" className="styled-input" min={1} value={apartment.guests} onChange={(e) => handleNumChange('guests', e.target.value)} placeholder="Es. 2" /></div>
 
               <div style={{ position: 'relative' }} ref={autocompleteRef}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><MapPin size={16} color="#8b5cf6" /><label style={{ fontWeight: '700', fontSize: '13px', color: '#334155' }}>Quartiere (NIL Milano)</label></div>
+                <FieldLabel text="Quartiere (NIL Milano)" icon={MapPin} iconColor="#8b5cf6" tip="Il quartiere ufficiale (NIL) dove si trova l'immobile. Serve a confrontare il tuo prezzo con la mediana reale del mercato in quella specifica zona." />
                 <input type="text" className="styled-input" value={apartment.neighbourhood} onChange={(e) => handleNeighbourhoodChange(e.target.value)} onFocus={() => { if (apartment.neighbourhood) { const matches = allNeighbourhoods.filter(n => n.toLowerCase().includes(apartment.neighbourhood.toLowerCase())); setFilteredSuggestions(matches.slice(0, 8)); setShowSuggestions(matches.length > 0); } }} placeholder="Digita es. Navigli..." />
                 {showSuggestions && filteredSuggestions.length > 0 && (
                   <div className="custom-scroll" style={{ position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: '#fff', border: '1px solid #cbd5e1', borderRadius: '10px', marginTop: '6px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 50, maxHeight: '240px', overflowY: 'auto' }}>
@@ -516,10 +535,10 @@ export default function App() {
                 )}
               </div>
 
-              <div className="form-row"><div><label style={{ fontWeight: '700', fontSize: '12px', color: '#475569' }}>Prezzo Base (€)</label><input type="number" className="styled-input" value={apartment.basePrice} onChange={(e) => handleNumChange('basePrice', e.target.value)} placeholder="Es. 110" /></div><div><label style={{ fontWeight: '700', fontSize: '12px', color: '#475569' }}>Host Fisso (€)</label><input type="number" className="styled-input" value={apartment.championPrice} onChange={(e) => handleNumChange('championPrice', e.target.value)} placeholder="Es. 125" /></div></div>
-              <div className="form-row"><div><label style={{ fontWeight: '700', fontSize: '12px', color: '#475569' }}>Minimo Floor (€)</label><input type="number" className="styled-input" value={apartment.floorPrice} onChange={(e) => handleNumChange('floorPrice', e.target.value)} placeholder="Es. 75" /></div><div><label style={{ fontWeight: '700', fontSize: '12px', color: '#475569' }}>Extra Notte (€)</label><input type="number" className="styled-input" value={apartment.dailyExtraFee} onChange={(e) => handleNumChange('dailyExtraFee', e.target.value)} placeholder="Es. 5" /></div></div>
-              <div className="form-row"><div><label style={{ fontWeight: '700', fontSize: '12px', color: '#475569' }}>Capacità Max</label><input type="number" className="styled-input" value={apartment.maxGuests} onChange={(e) => handleNumChange('maxGuests', e.target.value)} placeholder="Es. 4" /></div><div><label style={{ fontWeight: '700', fontSize: '12px', color: '#475569' }}>Fee Ospite Extra (€)</label><input type="number" className="styled-input" value={apartment.extraGuestFee} onChange={(e) => handleNumChange('extraGuestFee', e.target.value)} placeholder="Es. 25" /></div></div>
-              <div><label style={{ fontWeight: '700', fontSize: '12px', color: '#475569' }}>Pulizie Fisse Una Tantum (€)</label><input type="number" className="styled-input" value={apartment.fixedExtraFee} onChange={(e) => handleNumChange('fixedExtraFee', e.target.value)} placeholder="Es. 40" /></div>
+              <div className="form-row"><div><FieldLabel text="Prezzo Base (€)" tip="Il prezzo di partenza a notte, prima di stagionalità ed eventi. È il punto di riferimento su cui l'algoritmo applica tutti gli aggiustamenti." /><input type="number" className="styled-input" value={apartment.basePrice} onChange={(e) => handleNumChange('basePrice', e.target.value)} placeholder="Es. 110" /></div><div><FieldLabel text="Host Fisso (€)" tip="Il prezzo fisso che praticheresti senza pricing dinamico. Serve solo come confronto ('Delta vs Fisso Host'): non entra nel calcolo del prezzo Challenger." /><input type="number" className="styled-input" value={apartment.championPrice} onChange={(e) => handleNumChange('championPrice', e.target.value)} placeholder="Es. 125" /></div></div>
+              <div className="form-row"><div><FieldLabel text="Minimo Floor (€)" tip="Il prezzo più basso sotto il quale l'algoritmo non scenderà mai, qualunque sia il risultato del calcolo. È la tua rete di sicurezza." /><input type="number" className="styled-input" value={apartment.floorPrice} onChange={(e) => handleNumChange('floorPrice', e.target.value)} placeholder="Es. 75" /></div><div><FieldLabel text="Extra Notte (€)" tip="Un costo fisso aggiuntivo per ogni notte (es. utenze, servizi extra), sommato automaticamente al prezzo finale calcolato." /><input type="number" className="styled-input" value={apartment.dailyExtraFee} onChange={(e) => handleNumChange('dailyExtraFee', e.target.value)} placeholder="Es. 5" /></div></div>
+              <div className="form-row"><div><FieldLabel text="Capacità Max" tip="Il numero massimo di ospiti che l'immobile può ospitare. Viene usato anche per confrontare il tuo prezzo con annunci di dimensione simile nel quartiere." /><input type="number" className="styled-input" value={apartment.maxGuests} onChange={(e) => handleNumChange('maxGuests', e.target.value)} placeholder="Es. 4" /></div><div><FieldLabel text="Fee Ospite Extra (€)" tip="Il sovrapprezzo per notte per ogni ospite oltre i primi 2. Si applica solo se 'Ospiti Soggiorno' è maggiore di 2." /><input type="number" className="styled-input" value={apartment.extraGuestFee} onChange={(e) => handleNumChange('extraGuestFee', e.target.value)} placeholder="Es. 25" /></div></div>
+              <div><FieldLabel text="Pulizie Fisse Una Tantum (€)" tip="Il costo di pulizia addebitato una sola volta a soggiorno (non per notte). Nel preventivo viene ripartito automaticamente sul totale delle notti." /><input type="number" className="styled-input" value={apartment.fixedExtraFee} onChange={(e) => handleNumChange('fixedExtraFee', e.target.value)} placeholder="Es. 40" /></div>
             </div>
           </div>
         </div>
