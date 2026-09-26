@@ -86,7 +86,7 @@ def calculate_single_night(target_date_str, base_price, floor_price, champion_pr
         "01-01": ("Capodanno", 1.60), "01-06": ("Epifania", 1.30),
         "04-25": ("Liberazione", 1.35), "05-01": ("Primo Maggio", 1.35),
         "06-02": ("Repubblica", 1.35), "08-15": ("Ferragosto", 1.40),
-        "11-01": ("Ognissanti", 1.30), "12-07": ("Sant'Ambrogio", 1.70),
+        "11-01": ("Ognissanti", 1.30), "12-07": ("Sant'Ambrogio", 1.50),
         "12-08": ("Immacolata", 1.60), "12-24": ("Vigilia di Natale", 1.40),
         "12-25": ("Natale", 1.50), "12-26": ("Santo Stefano", 1.40),
         "12-31": ("San Silvestro", 2.00)
@@ -102,20 +102,20 @@ def calculate_single_night(target_date_str, base_price, floor_price, champion_pr
         active_event, multiplier = "Pasquetta", 1.40
 
     events_ranges = [
-        ("2026-04-21", "2026-04-26", "Salone del Mobile 2026", 2.20),
-        ("2026-06-19", "2026-06-23", "Fashion Week Uomo", 1.60),
-        ("2026-09-04", "2026-09-06", "GP Monza", 1.60),
-        ("2026-09-22", "2026-09-28", "Fashion Week Donna", 1.80),
-        ("2026-11-03", "2026-11-08", "EICMA 2026", 1.65),
-        ("2026-11-27", "2026-11-29", "Milano Games Week", 1.40),
-        ("2026-12-05", "2026-12-13", "Artigiano in Fiera", 1.50),
-        ("2027-01-15", "2027-01-19", "Fashion Week Uomo", 1.60),
-        ("2027-02-23", "2027-03-01", "Fashion Week Donna", 1.80),
-        ("2027-04-13", "2027-04-18", "Salone del Mobile 2027", 2.20),
-        ("2027-06-18", "2027-06-22", "Fashion Week Uomo", 1.60),
-        ("2027-09-03", "2027-09-05", "GP Monza", 1.60),
-        ("2027-09-21", "2027-09-27", "Fashion Week Donna", 1.80),
-        ("2027-11-09", "2027-11-14", "EICMA 2027", 1.65),
+        ("2026-04-21", "2026-04-26", "Salone del Mobile 2026", 2.30),
+        ("2026-06-19", "2026-06-23", "Fashion Week Uomo", 1.50),
+        ("2026-09-04", "2026-09-06", "GP Monza", 1.30),
+        ("2026-09-22", "2026-09-28", "Fashion Week Donna", 1.60),
+        ("2026-11-03", "2026-11-08", "EICMA 2026", 1.25),
+        ("2026-11-27", "2026-11-29", "Milano Games Week", 1.20),
+        ("2026-12-05", "2026-12-13", "Artigiano in Fiera", 1.25),
+        ("2027-01-15", "2027-01-19", "Fashion Week Uomo", 1.50),
+        ("2027-02-23", "2027-03-01", "Fashion Week Donna", 1.60),
+        ("2027-04-13", "2027-04-18", "Salone del Mobile 2027", 2.30),
+        ("2027-06-18", "2027-06-22", "Fashion Week Uomo", 1.50),
+        ("2027-09-03", "2027-09-05", "GP Monza", 1.30),
+        ("2027-09-21", "2027-09-27", "Fashion Week Donna", 1.60),
+        ("2027-11-09", "2027-11-14", "EICMA 2027", 1.25),
     ]
 
     for start_dt, end_dt, ev_name, ev_mult in events_ranges:
