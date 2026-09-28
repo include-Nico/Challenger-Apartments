@@ -23,7 +23,8 @@ class MilanChallengerEngine:
 
         try:
             cols = ['neighbourhood_cleansed', 'price', 'accommodates',
-                    'room_type', 'minimum_nights', 'number_of_reviews_ltm']
+                    'room_type', 'minimum_nights', 'number_of_reviews_ltm',
+                    'estimated_occupancy_l365d']
             df = pd.read_csv(self.csv_path, usecols=cols, low_memory=False)
             total = len(df)
 
@@ -31,6 +32,8 @@ class MilanChallengerEngine:
             df['price'] = pd.to_numeric(
                 df['price'].astype(str).str.replace(r'[^\d\.]', '', regex=True), errors='coerce')
             df['accommodates'] = pd.to_numeric(df['accommodates'], errors='coerce')
+            # Notti occupate stimate da Inside Airbnb (modello basato sulle recensioni, tetto 255 = 70%) -> %
+            df['occ_pct'] = pd.to_numeric(df['estimated_occupancy_l365d'], errors='coerce') / 365 * 100
             df = df.dropna(subset=['neighbourhood_cleansed', 'price', 'accommodates'])
 
             # Filtri di qualità: prezzi plausibili, solo appartamenti interi,
@@ -75,11 +78,15 @@ class MilanChallengerEngine:
                 sub, scope = near, "quartiere + capienza"
 
         prices = sub['price']
+        occ = sub['occ_pct'].dropna()
         stats = {
             "median": float(prices.median()),
             "p25": float(prices.quantile(0.25)),
             "p75": float(prices.quantile(0.75)),
             "n": int(len(prices)),
+            "occ_mean": round(float(occ.mean()), 1) if len(occ) else None,
+            "occ_p25": round(float(occ.quantile(0.25)), 1) if len(occ) else None,
+            "occ_p75": round(float(occ.quantile(0.75)), 1) if len(occ) else None,
             "scope": scope,
             "reliable": bool(len(prices) >= MIN_SAMPLE),
         }
@@ -88,4 +95,3 @@ class MilanChallengerEngine:
 
     def get_median(self, neighbourhood: str, max_guests: int = None) -> float:
         return self.get_market_stats(neighbourhood, max_guests)["median"]
-    

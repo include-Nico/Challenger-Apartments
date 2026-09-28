@@ -267,6 +267,9 @@ export default function App() {
   const deltaRevenue = totalChallengerStay - totalChampionStay;
   const perPersonTotal = apartment.guests > 0 ? (totalChallengerStay / apartment.guests) : totalChallengerStay;
   const currentMarketComp = currentRec.market_median || 0;
+  const marketOcc = currentRec.market_occupancy_pct;
+  const marketOccLow = currentRec.market_occupancy_p25;
+  const marketOccHigh = currentRec.market_occupancy_p75;
   const challengerCommission = totalChallengerStay * (otaRate / 100);
   const challengerNet = totalChallengerStay - challengerCommission;
 
@@ -521,6 +524,15 @@ export default function App() {
           <div className={!isConfigComplete ? 'blur-locked' : ''}>
             <span style={{ fontSize: '13px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>Mediana ({apartment.neighbourhood || 'NIL'})</span>
             <div style={{ fontSize: '32px', fontWeight: '800', color: '#8b5cf6', marginTop: '8px' }}>€{isConfigComplete ? currentMarketComp : '---'}<span style={{ fontSize: '14px', fontWeight: '500', color: '#64748b' }}> / base</span></div>
+            {isConfigComplete && marketOcc != null && (
+              <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #e2e8f0', fontSize: '13px', color: '#475569' }}>
+                Occupazione stimata: <strong style={{ color: '#7c3aed' }}>~{Math.round(marketOcc)}%</strong>
+                <span style={{ color: '#94a3b8' }}> (tipico {Math.round(marketOccLow)}–{Math.round(marketOccHigh)}%)</span>
+                <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px', lineHeight: 1.4 }}>
+                  Stima prudente di Inside Airbnb basata sulle recensioni (tetto 70%): tendenzialmente per difetto. Usala per confrontare zone, non come dato reale.
+                </div>
+              </div>
+            )}
           </div>
         </div>
         <div className="metric-card">

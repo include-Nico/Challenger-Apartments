@@ -220,11 +220,13 @@ def calculate_single_night(target_date_str, base_price, floor_price, champion_pr
     market_scope = "sintetico"
     market_reliable = False
     market_p25 = market_p75 = 0.0
+    occ_mean = occ_p25 = occ_p75 = None
     if USE_REAL_DATA:
         try:
             stats = market_engine.get_market_stats(neighbourhood, max_guests)
             market_n, market_scope, market_reliable = stats["n"], stats["scope"], stats["reliable"]
             market_p25, market_p75 = stats["p25"], stats["p75"]
+            occ_mean, occ_p25, occ_p75 = stats["occ_mean"], stats["occ_p25"], stats["occ_p75"]
             # Con troppo pochi comparabili il mercato non entra nel blend
             market_median = stats["median"] if market_reliable else 0.0
         except Exception as e:
@@ -266,6 +268,9 @@ def calculate_single_night(target_date_str, base_price, floor_price, champion_pr
         "market_reliable": market_reliable,
         "market_p25": round(market_p25, 2),
         "market_p75": round(market_p75, 2),
+        "market_occupancy_pct": occ_mean if market_reliable else None,
+        "market_occupancy_p25": occ_p25 if market_reliable else None,
+        "market_occupancy_p75": occ_p75 if market_reliable else None,
         "active_event": active_event,
         "multiplier": round(total_multiplier, 2),
         "delta": delta
