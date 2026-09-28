@@ -147,6 +147,9 @@ export default function App() {
   
   const autocompleteRef = useRef(null);
   const eventsRef = useRef(null);
+  const occRef = useRef(null);
+  const [isOccOpen, setIsOccOpen] = useState(false);
+  const [hasViewedOcc, setHasViewedOcc] = useState(false);
 
   const [rawPricingData, setRawPricingData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -178,6 +181,7 @@ export default function App() {
     const handleClickOutside = (e) => {
       if (autocompleteRef.current && !autocompleteRef.current.contains(e.target)) setShowSuggestions(false);
       if (eventsRef.current && !eventsRef.current.contains(e.target)) setIsEventsOpen(false);
+      if (occRef.current && !occRef.current.contains(e.target)) setIsOccOpen(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -270,6 +274,7 @@ export default function App() {
   const marketOcc = currentRec.market_occupancy_pct;
   const marketOccLow = currentRec.market_occupancy_p25;
   const marketOccHigh = currentRec.market_occupancy_p75;
+  const occPos = (v) => Math.min(100, Math.max(0, (v / 70) * 100));
   const challengerCommission = totalChallengerStay * (otaRate / 100);
   const challengerNet = totalChallengerStay - challengerCommission;
 
@@ -280,6 +285,9 @@ export default function App() {
 
   useEffect(() => { if (upcomingEvents.length > 0) setHasViewedEvents(false); }, [upcomingEvents.length]);
   const toggleEventsMenu = () => { setIsEventsOpen(!isEventsOpen); if (!isEventsOpen) setHasViewedEvents(true); };
+  const occKey = marketOcc != null ? `${apartment.neighbourhood}|${apartment.maxGuests}|${marketOcc}` : null;
+  useEffect(() => { if (occKey) setHasViewedOcc(false); }, [occKey]);
+  const toggleOccMenu = () => { setIsOccOpen(!isOccOpen); if (!isOccOpen) setHasViewedOcc(true); };
 
   // --- NUOVA FUNZIONE: INDICATORE DI STRATEGIA (Aggiunta qui senza toccare il resto) ---
   const renderStrategyIndicator = () => {
@@ -466,6 +474,28 @@ export default function App() {
 
         <div className="header-actions">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {marketOcc != null && (
+              <div style={{ position: 'relative' }} ref={occRef}>
+                <button onClick={toggleOccMenu} className="tab-btn" disabled={!isConfigComplete} title="Occupazione stimata del mercato" style={{ opacity: isConfigComplete ? 1 : 0.5, background: '#fff', border: '1px solid #e2e8f0', padding: '8px', borderRadius: '10px', cursor: isConfigComplete ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', position: 'relative' }}>
+                  <Users size={20} color="#475569" />
+                  {!hasViewedOcc && <span style={{ position: 'absolute', top: '-2px', right: '-2px', width: '10px', height: '10px', backgroundColor: '#8b5cf6', borderRadius: '50%', border: '2px solid #fff' }}></span>}
+                </button>
+                {isOccOpen && (
+                  <div className="custom-scroll events-dropdown" style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', width: '300px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 100, maxHeight: '400px', overflowY: 'auto' }}>
+                    <div style={{ padding: '16px', borderBottom: '1px solid #f1f5f9', background: '#f8fafc' }}><h3 style={{ fontSize: '14px', fontWeight: '800', margin: 0 }}>Occupazione stimata del mercato</h3></div>
+                    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <div><span style={{ fontSize: '32px', fontWeight: '800', color: '#8b5cf6' }}>~{Math.round(marketOcc)}%</span><span style={{ fontSize: '12px', color: '#64748b' }}> media · tipico {Math.round(marketOccLow)}–{Math.round(marketOccHigh)}%</span></div>
+                      <div style={{ position: 'relative', height: '8px', background: '#e2e8f0', borderRadius: '4px' }}>
+                        <div style={{ position: 'absolute', top: 0, bottom: 0, left: `${occPos(marketOccLow)}%`, width: `${occPos(marketOccHigh) - occPos(marketOccLow)}%`, background: '#c4b5fd', borderRadius: '4px' }} />
+                        <div style={{ position: 'absolute', top: '-3px', left: `calc(${occPos(marketOcc)}% - 7px)`, width: '14px', height: '14px', background: '#8b5cf6', border: '2px solid #fff', borderRadius: '50%' }} />
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#94a3b8' }}><span>0%</span><span>70% (tetto)</span></div>
+                      <div style={{ fontSize: '12px', color: '#475569', lineHeight: 1.5 }}>Basata su {currentRec.market_sample_count} annunci comparabili ({currentRec.market_scope}). Stima di Inside Airbnb ricavata dalle recensioni: tende a sottostimare. Usala per confrontare zone, non come dato reale.</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
             <div style={{ position: 'relative' }} ref={eventsRef}>
               <button onClick={toggleEventsMenu} className="tab-btn" disabled={!isConfigComplete} style={{ opacity: isConfigComplete ? 1 : 0.5, background: '#fff', border: '1px solid #e2e8f0', padding: '8px', borderRadius: '10px', cursor: isConfigComplete ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', position: 'relative' }}>
                 <Bell size={20} color="#475569" />
@@ -524,15 +554,6 @@ export default function App() {
           <div className={!isConfigComplete ? 'blur-locked' : ''}>
             <span style={{ fontSize: '13px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>Mediana ({apartment.neighbourhood || 'NIL'})</span>
             <div style={{ fontSize: '32px', fontWeight: '800', color: '#8b5cf6', marginTop: '8px' }}>€{isConfigComplete ? currentMarketComp : '---'}<span style={{ fontSize: '14px', fontWeight: '500', color: '#64748b' }}> / base</span></div>
-            {isConfigComplete && marketOcc != null && (
-              <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #e2e8f0', fontSize: '13px', color: '#475569' }}>
-                Occupazione stimata: <strong style={{ color: '#7c3aed' }}>~{Math.round(marketOcc)}%</strong>
-                <span style={{ color: '#94a3b8' }}> (tipico {Math.round(marketOccLow)}–{Math.round(marketOccHigh)}%)</span>
-                <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px', lineHeight: 1.4 }}>
-                  Stima prudente di Inside Airbnb basata sulle recensioni (tetto 70%): tendenzialmente per difetto. Usala per confrontare zone, non come dato reale.
-                </div>
-              </div>
-            )}
           </div>
         </div>
         <div className="metric-card">
