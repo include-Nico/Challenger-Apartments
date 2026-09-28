@@ -1,42 +1,122 @@
+import base64
+import hmac
 import hashlib
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+import json
+import os
+import time
+from collections import defaultdict, deque
 from datetime import datetime, date, timedelta
+from zoneinfo import ZoneInfo
+
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field
+
+# --- CONFIGURAZIONE (da variabili d'ambiente o da un file backend/.env, mai nel codice) ---
+try:
+    from dotenv import load_dotenv
+    load_dotenv()  # in locale legge backend/.env; in produzione non fa nulla se il file non c'è
+except ImportError:
+    pass
+APP_PASSWORD = os.environ.get("APP_PASSWORD")
+SECRET_KEY = os.environ.get("SECRET_KEY")
+if not APP_PASSWORD or not SECRET_KEY:
+    raise RuntimeError(
+        "Imposta le variabili d'ambiente APP_PASSWORD e SECRET_KEY (vedi .env.example)."
+    )
+ALLOWED_ORIGINS = [o.strip() for o in os.environ.get(
+    "ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",") if o.strip()]
+TOKEN_TTL_SECONDS = int(os.environ.get("TOKEN_TTL_SECONDS", 12 * 3600))
+MAX_RANGE_DAYS = 366
+ROME = ZoneInfo("Europe/Rome")
 
 # --- CONNESSIONE AL MOTORE REALE ---
 try:
     from app.engine import MilanChallengerEngine
-    market_engine = MilanChallengerEngine() 
-    USE_REAL_DATA = True
-    print("✅ Motore dati connesso. Utilizzo file listings.csv locale.")
+    market_engine = MilanChallengerEngine()
+    USE_REAL_DATA = market_engine.df is not None
+    if USE_REAL_DATA:
+        print("✅ Motore dati connesso. Utilizzo file listings.csv locale.")
 except Exception as e:
+    market_engine = None
     USE_REAL_DATA = False
     print(f"⚠️ Impossibile caricare engine.py. Errore: {e}")
 
-app = FastAPI(title="ChallengerHouse API", version="9.0")
+app = FastAPI(title="ChallengerHouse API", version="10.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
-class AuthRequest(BaseModel):
-    pin: str
 
-SECRET_PIN_HASH = "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4"
+# --- AUTENTICAZIONE: token firmato HMAC con scadenza ---
+def _b64(data: bytes) -> str:
+    return base64.urlsafe_b64encode(data).decode().rstrip("=")
+
+
+def _sign(body: str) -> str:
+    return _b64(hmac.new(SECRET_KEY.encode(), body.encode(), hashlib.sha256).digest())
+
+
+def create_token() -> str:
+    body = _b64(json.dumps({"exp": int(time.time()) + TOKEN_TTL_SECONDS}).encode())
+    return f"{body}.{_sign(body)}"
+
+
+def token_is_valid(token: str) -> bool:
+    try:
+        body, sig = token.split(".", 1)
+        if not hmac.compare_digest(sig, _sign(body)):
+            return False
+        payload = json.loads(base64.urlsafe_b64decode(body + "=" * (-len(body) % 4)))
+        return int(payload["exp"]) > time.time()
+    except Exception:
+        return False
+
+
+def require_auth(authorization: str = Header(default=None)):
+    if not authorization or not authorization.startswith("Bearer ") \
+            or not token_is_valid(authorization[7:]):
+        raise HTTPException(status_code=401, detail="Non autorizzato")
+
+
+# --- RATE LIMIT sui tentativi di login falliti (in memoria, per IP) ---
+LOGIN_MAX_FAILS = 5
+LOGIN_WINDOW_SECONDS = 300
+_failed_logins = defaultdict(deque)
+
+
+def _client_ip(request: Request) -> str:
+    return request.client.host if request.client else "unknown"
+
+
+class AuthRequest(BaseModel):
+    password: str = Field(min_length=1, max_length=128)
+
 
 @app.post("/api/auth")
-def verify_pin(request: AuthRequest):
-    req_hash = hashlib.sha256(request.pin.encode()).hexdigest()
-    if req_hash == SECRET_PIN_HASH:
-        return {"status": "ok", "message": "Accesso consentito"}
-    raise HTTPException(status_code=401, detail="PIN errato")
+def login(payload: AuthRequest, request: Request):
+    ip = _client_ip(request)
+    now = time.time()
+    fails = _failed_logins[ip]
+    while fails and now - fails[0] > LOGIN_WINDOW_SECONDS:
+        fails.popleft()
+    if len(fails) >= LOGIN_MAX_FAILS:
+        raise HTTPException(status_code=429, detail="Troppi tentativi. Riprova tra qualche minuto.")
 
-@app.get("/api/neighbourhoods")
+    if hmac.compare_digest(payload.password.encode(), APP_PASSWORD.encode()):
+        fails.clear()
+        return {"status": "ok", "token": create_token(), "expires_in": TOKEN_TTL_SECONDS}
+
+    fails.append(now)
+    raise HTTPException(status_code=401, detail="Password errata")
+
+
+@app.get("/api/neighbourhoods", dependencies=[Depends(require_auth)])
 def get_neighbourhoods():
     if USE_REAL_DATA and market_engine:
         return {"neighbourhoods": market_engine.get_all_neighbourhoods()}
@@ -62,7 +142,7 @@ def calculate_single_night(target_date_str, base_price, floor_price, champion_pr
     is_weekend = dt.weekday() >= 4 
     multiplier = 1.0
     active_event = None
-    today = date.today()
+    today = datetime.now(ROME).date()
     lead_days = (dt.date() - today).days
     
     lead_multiplier = 1.0
@@ -134,19 +214,24 @@ def calculate_single_night(target_date_str, base_price, floor_price, champion_pr
     # 1. Prezzo puro in base alla tua strategia (Stagionalità + Eventi)
     user_raw_price = seasonal_base_price * total_multiplier
 
-    # 2. Ottieni la mediana del Mercato Reale
-    market_median = 0
-    debug_msg = "Reale (CSV)"
+    # 2. Ottieni la mediana del Mercato Reale (con numero di comparabili e affidabilità)
+    market_median = 0.0
+    market_n = 0
+    market_scope = "sintetico"
+    market_reliable = False
+    market_p25 = market_p75 = 0.0
     if USE_REAL_DATA:
         try:
-            real_val = market_engine.get_median(neighbourhood, max_guests) 
-            market_median = float(real_val)
+            stats = market_engine.get_market_stats(neighbourhood, max_guests)
+            market_n, market_scope, market_reliable = stats["n"], stats["scope"], stats["reliable"]
+            market_p25, market_p75 = stats["p25"], stats["p75"]
+            # Con troppo pochi comparabili il mercato non entra nel blend
+            market_median = stats["median"] if market_reliable else 0.0
         except Exception as e:
             market_median = get_synthetic_market_median(neighbourhood, max_guests)
-            debug_msg = f"Err: {e}"
+            market_scope = f"sintetico ({e})"
     else:
         market_median = get_synthetic_market_median(neighbourhood, max_guests)
-        debug_msg = "Sintetico"
 
     # Anche il mercato si alza durante gli eventi
     if multiplier > 1.0 and market_median > 0:
@@ -176,24 +261,28 @@ def calculate_single_night(target_date_str, base_price, floor_price, champion_pr
         "challenger_price": round(final_challenger_price, 2),
         "champion_price": round(champion_price, 2),
         "market_median": round(market_median, 2),
-        "market_sample_count": debug_msg,
+        "market_sample_count": market_n,
+        "market_scope": market_scope,
+        "market_reliable": market_reliable,
+        "market_p25": round(market_p25, 2),
+        "market_p75": round(market_p75, 2),
         "active_event": active_event,
         "multiplier": round(total_multiplier, 2),
         "delta": delta
     }
 
-@app.get("/api/pricing/calculate-range")
+@app.get("/api/pricing/calculate-range", dependencies=[Depends(require_auth)])
 def calculate_pricing_range(
     start_date: str,
     end_date: str,
-    base_price: float,
-    floor_price: float,
-    champion_price: float,
-    neighbourhood: str = "Centrale",
-    max_guests: int = 4,
-    extra_guest_fee: float = 25.0,
-    daily_extra_fee: float = 5.0,
-    guests: int = 2
+    base_price: float = Query(gt=0, le=10000),
+    floor_price: float = Query(ge=0, le=10000),
+    champion_price: float = Query(ge=0, le=10000),
+    neighbourhood: str = Query(default="Centrale", min_length=1, max_length=80),
+    max_guests: int = Query(default=4, ge=1, le=16),
+    extra_guest_fee: float = Query(default=25.0, ge=0, le=500),
+    daily_extra_fee: float = Query(default=5.0, ge=0, le=500),
+    guests: int = Query(default=2, ge=1, le=16),
 ):
     try:
         current_dt = datetime.strptime(start_date, "%Y-%m-%d")
@@ -201,11 +290,16 @@ def calculate_pricing_range(
     except ValueError:
         raise HTTPException(status_code=400, detail="Formato data non valido")
 
+    if end_dt < current_dt:
+        raise HTTPException(status_code=400, detail="La data di fine precede quella di inizio")
+    if (end_dt - current_dt).days + 1 > MAX_RANGE_DAYS:
+        raise HTTPException(status_code=400, detail=f"Intervallo massimo: {MAX_RANGE_DAYS} giorni")
+
     results = []
     while current_dt <= end_dt:
         date_str = current_dt.strftime("%Y-%m-%d")
         night_data = calculate_single_night(
-            date_str, base_price, floor_price, champion_price, 
+            date_str, base_price, floor_price, champion_price,
             neighbourhood, max_guests, extra_guest_fee, daily_extra_fee, guests
         )
         results.append(night_data)

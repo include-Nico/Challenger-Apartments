@@ -12,6 +12,22 @@ import {
 
 const API_BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8000').replace(/\/$/, '');
 
+const TOKEN_KEY = 'challenger_token';
+
+// fetch con token Bearer; se il server risponde 401 (token scaduto/non valido) forza il logout
+const authFetch = async (url, options = {}) => {
+  const token = localStorage.getItem(TOKEN_KEY);
+  const res = await fetch(url, {
+    ...options,
+    headers: { ...(options.headers || {}), Authorization: `Bearer ${token}` }
+  });
+  if (res.status === 401) {
+    localStorage.removeItem(TOKEN_KEY);
+    window.dispatchEvent(new Event('challenger-logout'));
+  }
+  return res;
+};
+
 const loadSavedState = (key, defaultValue) => {
   try {
     const saved = localStorage.getItem(key);
@@ -37,7 +53,7 @@ const FieldLabel = ({ text, tip, icon: Icon, iconColor, color = '#334155' }) => 
 );
 
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => loadSavedState('challenger_auth', false));
+  const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem(TOKEN_KEY));
   const [pinInput, setPinInput] = useState('');
   const [loginError, setLoginError] = useState('');
 
@@ -47,12 +63,17 @@ export default function App() {
       const res = await fetch(`${API_BASE_URL}/api/auth`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pin: pinInput })
+        body: JSON.stringify({ password: pinInput })
       });
       if (res.ok) {
+        const { token } = await res.json();
+        localStorage.setItem(TOKEN_KEY, token);
         setIsAuthenticated(true);
+      } else if (res.status === 429) {
+        setLoginError("Troppi tentativi. Riprova tra qualche minuto.");
+        setPinInput('');
       } else {
-        setLoginError("PIN errato. Riprova.");
+        setLoginError("Password errata. Riprova.");
         setPinInput('');
       }
     } catch (err) {
@@ -131,7 +152,12 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState(false);
 
-  useEffect(() => { localStorage.setItem('challenger_auth', JSON.stringify(isAuthenticated)); }, [isAuthenticated]);
+  useEffect(() => { localStorage.removeItem('challenger_auth'); }, []); // pulizia del vecchio flag non sicuro
+  useEffect(() => {
+    const onLogout = () => setIsAuthenticated(false);
+    window.addEventListener('challenger-logout', onLogout);
+    return () => window.removeEventListener('challenger-logout', onLogout);
+  }, []);
   useEffect(() => { localStorage.setItem('challenger_activeTab', JSON.stringify(activeTab)); }, [activeTab]);
   useEffect(() => { localStorage.setItem('challenger_horizon', JSON.stringify(listingHorizonDays)); }, [listingHorizonDays]);
   useEffect(() => { localStorage.setItem('challenger_otaRate', JSON.stringify(otaRate)); }, [otaRate]);
@@ -141,7 +167,7 @@ export default function App() {
     if (!isAuthenticated) return;
     const fetchNeighbourhoods = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/neighbourhoods`);
+        const res = await authFetch(`${API_BASE_URL}/api/neighbourhoods`);
         if (res.ok) setAllNeighbourhoods((await res.json()).neighbourhoods || []);
       } catch (e) { console.warn("API Quartieri non raggiungibile"); }
     };
@@ -204,7 +230,7 @@ export default function App() {
 
       const url = `${API_BASE_URL}/api/pricing/calculate-range?${params.toString()}`;
       
-      const res = await fetch(url);
+      const res = await authFetch(url);
       if (!res.ok) throw new Error("Server Error");
       
       const data = await res.json();
@@ -372,7 +398,7 @@ export default function App() {
               <Lock size={40} color="#3b82f6" />
             </div>
             <h2 style={{ color: '#fff', fontSize: '20px', fontWeight: '800', margin: '0 0 8px 0' }}>Accesso Riservato</h2>
-            <p style={{ color: '#94a3b8', fontSize: '13px', margin: '0 0 16px 0' }}>Inserisci il PIN per avviare l'algoritmo</p>
+            <p style={{ color: '#94a3b8', fontSize: '13px', margin: '0 0 16px 0' }}>Inserisci la password per avviare l'algoritmo</p>
             
             {loginError && (
               <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #ef4444', color: '#fca5a5', padding: '10px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', animation: 'shake 0.4s' }}>
@@ -380,7 +406,7 @@ export default function App() {
               </div>
             )}
 
-            <input type="password" maxLength={4} className="lock-input" value={pinInput} onChange={(e) => setPinInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleLogin()} placeholder="••••" />
+            <input type="password" maxLength={128} className="lock-input" value={pinInput} onChange={(e) => setPinInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleLogin()} placeholder="••••" />
             <button onClick={handleLogin} style={{ width: '100%', padding: '14px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: '700', cursor: 'pointer', transition: 'background 0.2s' }}>Sblocca Sistema</button>
           </div>
         </div>
@@ -456,7 +482,7 @@ export default function App() {
                 </div>
               )}
             </div>
-            <button onClick={() => { setIsAuthenticated(false); setPinInput(''); }} style={{ background: '#fef2f2', border: '1px solid #fecaca', padding: '8px', borderRadius: '10px', cursor: 'pointer', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Blocca App">
+            <button onClick={() => { localStorage.removeItem(TOKEN_KEY); setIsAuthenticated(false); setPinInput(''); }} style={{ background: '#fef2f2', border: '1px solid #fecaca', padding: '8px', borderRadius: '10px', cursor: 'pointer', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Blocca App">
               <Unlock size={20} />
             </button>
           </div>
