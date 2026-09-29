@@ -186,6 +186,7 @@ def calculate_single_night(target_date_str, base_price, floor_price, champion_pr
         ("2026-06-19", "2026-06-23", "Fashion Week Uomo", 1.50),
         ("2026-09-04", "2026-09-06", "GP Monza", 1.30),
         ("2026-09-22", "2026-09-28", "Fashion Week Donna", 1.60),
+        ("2026-10-05", "2026-10-08", "Fiata World Congress", 1.15),
         ("2026-11-03", "2026-11-08", "EICMA 2026", 1.25),
         ("2026-11-27", "2026-11-29", "Milano Games Week", 1.20),
         ("2026-12-05", "2026-12-13", "Artigiano in Fiera", 1.25),
