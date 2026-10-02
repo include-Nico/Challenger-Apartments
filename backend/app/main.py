@@ -32,15 +32,28 @@ ROME = ZoneInfo("Europe/Rome")
 
 # --- CONNESSIONE AL MOTORE REALE ---
 try:
-    from app.engine import MilanChallengerEngine
+    from app.engine import MilanChallengerEngine, DemandEngine, MIN_SAMPLE
     market_engine = MilanChallengerEngine()
     USE_REAL_DATA = market_engine.df is not None
     if USE_REAL_DATA:
         print("✅ Motore dati connesso. Utilizzo file listings.csv locale.")
+    demand_engine = DemandEngine(os.path.dirname(market_engine.csv_path))
 except Exception as e:
     market_engine = None
+    demand_engine = None
     USE_REAL_DATA = False
+    MIN_SAMPLE = 8
     print(f"⚠️ Impossibile caricare engine.py. Errore: {e}")
+
+
+def market_weight(n: int) -> float:
+    """Quanto peso dare al mercato nel blend col tuo prezzo: parte da 0.30 appena il campione
+    è abbastanza grande da essere usato, e sale fino a un tetto di 0.60 con campioni ampi.
+    Sostituisce il vecchio peso fisso del 50%, che non distingueva un quartiere con 9 annunci
+    comparabili da uno con 600."""
+    if n < MIN_SAMPLE:
+        return 0.0
+    return round(min(0.60, 0.30 + 0.30 * min(1.0, (n - MIN_SAMPLE) / 150)), 3)
 
 app = FastAPI(title="ChallengerHouse API", version="10.0")
 
@@ -236,24 +249,31 @@ def calculate_single_night(target_date_str, base_price, floor_price, champion_pr
     else:
         market_median = get_synthetic_market_median(neighbourhood, max_guests)
 
-    # Anche il mercato si alza durante gli eventi
-    if multiplier > 1.0 and market_median > 0:
+    # 3. Domanda osservata per QUESTA notte specifica (da compare_calendars.py), se disponibile.
+    # È un segnale reale e indipendente, non una regola scritta a mano. Se non c'è per questa
+    # data, si ricade sulla vecchia euristica: il mercato si alza solo quando scatta la tua
+    # regola su eventi/festività/weekend.
+    demand_index = demand_engine.get(target_date_str) if demand_engine else None
+    demand_adjustment_pct = None
+    if demand_index is not None and market_median > 0:
+        demand_adjustment_pct = max(-10.0, min(20.0, (demand_index - 1) * 40))
+        market_median *= (1 + demand_adjustment_pct / 100)
+    elif multiplier > 1.0 and market_median > 0:
         market_median *= (multiplier - 0.1)
 
-    # 3. GRAVITÀ DI MERCATO: Il prezzo suggerito è una fusione (50/50) tra le tue regole e il mercato locale
-    if market_median > 0:
-        blended_price = (user_raw_price + market_median) / 2
-    else:
-        blended_price = user_raw_price
+    # 4. GRAVITÀ DI MERCATO: fusione fra le tue regole e il mercato locale, pesata in base
+    # all'affidabilità del campione (vedi market_weight) invece di un fisso 50/50.
+    w = market_weight(market_n) if market_median > 0 else 0.0
+    blended_price = user_raw_price * (1 - w) + market_median * w if w > 0 else user_raw_price
     
-    # 4. Aggiungi i costi extra fissi (ospiti aggiuntivi e fee giornaliera)
+    # 5. Aggiungi i costi extra fissi (ospiti aggiuntivi e fee giornaliera)
     if guests > 2:
         extra_people = guests - 2
         blended_price += (extra_people * extra_guest_fee)
 
     blended_price += daily_extra_fee
     
-    # 5. Applica il pavimento (Floor Price) di sicurezza
+    # 6. Applica il pavimento (Floor Price) di sicurezza
     final_challenger_price = max(floor_price, blended_price)
 
     delta = round(final_challenger_price - champion_price, 2)
@@ -272,6 +292,9 @@ def calculate_single_night(target_date_str, base_price, floor_price, champion_pr
         "market_occupancy_pct": occ_mean if market_reliable else None,
         "market_occupancy_p25": occ_p25 if market_reliable else None,
         "market_occupancy_p75": occ_p75 if market_reliable else None,
+        "market_weight": w,
+        "demand_index": round(demand_index, 3) if demand_index is not None else None,
+        "demand_adjustment_pct": round(demand_adjustment_pct, 1) if demand_adjustment_pct is not None else None,
         "active_event": active_event,
         "multiplier": round(total_multiplier, 2),
         "delta": delta

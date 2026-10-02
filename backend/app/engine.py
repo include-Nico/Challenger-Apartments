@@ -95,3 +95,50 @@ class MilanChallengerEngine:
 
     def get_median(self, neighbourhood: str, max_guests: int = None) -> float:
         return self.get_market_stats(neighbourhood, max_guests)["median"]
+
+
+import glob
+import re
+
+MIN_PICKUP_SAMPLE = 80  # sotto questa soglia la notte non è ritenuta affidabile
+
+
+class DemandEngine:
+    """Indice di domanda reale per data, ricavato dal confronto di due snapshot del calendario
+    (vedi backend/compare_calendars.py). Facoltativo: se non trova questi file, non fa nulla,
+    e il resto dell'app continua a funzionare solo con le regole manuali.
+
+    Se più file coprono la stessa data, vince quello costruito con lo snapshot più recente
+    (ricavato dal nome del file: calendar_pickup_<vecchio>_<nuovo>.csv)."""
+
+    def __init__(self, data_dir: str):
+        self.by_date = {}
+        self._load(data_dir)
+
+    def _load(self, data_dir: str):
+        pattern = os.path.join(data_dir, "calendar_pickup_*.csv")
+        files = sorted(glob.glob(pattern))
+        name_re = re.compile(r"calendar_pickup_(\d{4}-\d{2}-\d{2})_(\d{4}-\d{2}-\d{2})\.csv$")
+        for path in files:
+            m = name_re.search(os.path.basename(path))
+            freshness = m.group(2) if m else ""
+            try:
+                df = pd.read_csv(path, usecols=["date", "avail_a", "demand_index"])
+            except Exception as e:
+                print(f"⚠️ Impossibile leggere {path}: {e}")
+                continue
+            df = df.dropna(subset=["demand_index"])
+            df = df[pd.to_numeric(df["avail_a"], errors="coerce") >= MIN_PICKUP_SAMPLE]
+            for _, row in df.iterrows():
+                d = str(row["date"])
+                prev = self.by_date.get(d)
+                if prev is None or freshness >= prev[1]:
+                    self.by_date[d] = (float(row["demand_index"]), freshness)
+        if self.by_date:
+            dates = sorted(self.by_date)
+            print(f"✅ Domanda reale caricata per {len(self.by_date)} notti "
+                  f"({dates[0]} -> {dates[-1]}, da {len(files)} file calendar_pickup).")
+
+    def get(self, date_str: str):
+        v = self.by_date.get(date_str)
+        return v[0] if v else None
