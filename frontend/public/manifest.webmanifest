@@ -1,0 +1,12 @@
+{
+  "name": "ChallengerHouse",
+  "short_name": "Challenger",
+  "description": "Algoritmo predittivo per affitti brevi",
+  "theme_color": "#0f172a",
+  "background_color": "#020617",
+  "display": "standalone",
+  "icons": [
+    { "src": "/casa_soldi_icon.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/casa_soldi_icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
