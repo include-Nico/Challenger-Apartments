@@ -14,15 +14,23 @@ const API_BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8000').r
 
 const TOKEN_KEY = 'challenger_token';
 
+// localStorage può lanciare un errore (Safari in Navigazione privata, "Blocca tutti i cookie",
+// spazio esaurito...). Senza protezione, un errore qui bloccherebbe l'intera app con schermata
+// bianca. Con queste funzioni, se non è disponibile, l'app funziona lo stesso: semplicemente
+// non ricorda le preferenze da una visita all'altra.
+const safeGet = (key) => { try { return localStorage.getItem(key); } catch { return null; } };
+const safeSet = (key, value) => { try { localStorage.setItem(key, value); } catch { /* ignorato */ } };
+const safeRemove = (key) => { try { localStorage.removeItem(key); } catch { /* ignorato */ } };
+
 // fetch con token Bearer; se il server risponde 401 (token scaduto/non valido) forza il logout
 const authFetch = async (url, options = {}) => {
-  const token = localStorage.getItem(TOKEN_KEY);
+  const token = safeGet(TOKEN_KEY);
   const res = await fetch(url, {
     ...options,
     headers: { ...(options.headers || {}), Authorization: `Bearer ${token}` }
   });
   if (res.status === 401) {
-    localStorage.removeItem(TOKEN_KEY);
+    safeRemove(TOKEN_KEY);
     window.dispatchEvent(new Event('challenger-logout'));
   }
   return res;
@@ -53,7 +61,7 @@ const FieldLabel = ({ text, tip, icon: Icon, iconColor, color = '#334155' }) => 
 );
 
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem(TOKEN_KEY));
+  const [isAuthenticated, setIsAuthenticated] = useState(() => !!safeGet(TOKEN_KEY));
   const [pinInput, setPinInput] = useState('');
   const [loginError, setLoginError] = useState('');
 
@@ -67,7 +75,7 @@ export default function App() {
       });
       if (res.ok) {
         const { token } = await res.json();
-        localStorage.setItem(TOKEN_KEY, token);
+        safeSet(TOKEN_KEY, token);
         setIsAuthenticated(true);
       } else if (res.status === 429) {
         setLoginError("Troppi tentativi. Riprova tra qualche minuto.");
@@ -155,16 +163,16 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState(false);
 
-  useEffect(() => { localStorage.removeItem('challenger_auth'); }, []); // pulizia del vecchio flag non sicuro
+  useEffect(() => { safeRemove('challenger_auth'); }, []); // pulizia del vecchio flag non sicuro
   useEffect(() => {
     const onLogout = () => setIsAuthenticated(false);
     window.addEventListener('challenger-logout', onLogout);
     return () => window.removeEventListener('challenger-logout', onLogout);
   }, []);
-  useEffect(() => { localStorage.setItem('challenger_activeTab', JSON.stringify(activeTab)); }, [activeTab]);
-  useEffect(() => { localStorage.setItem('challenger_horizon', JSON.stringify(listingHorizonDays)); }, [listingHorizonDays]);
-  useEffect(() => { localStorage.setItem('challenger_otaRate', JSON.stringify(otaRate)); }, [otaRate]);
-  useEffect(() => { localStorage.setItem('challenger_apartment', JSON.stringify(apartment)); }, [apartment]);
+  useEffect(() => { safeSet('challenger_activeTab', JSON.stringify(activeTab)); }, [activeTab]);
+  useEffect(() => { safeSet('challenger_horizon', JSON.stringify(listingHorizonDays)); }, [listingHorizonDays]);
+  useEffect(() => { safeSet('challenger_otaRate', JSON.stringify(otaRate)); }, [otaRate]);
+  useEffect(() => { safeSet('challenger_apartment', JSON.stringify(apartment)); }, [apartment]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -515,7 +523,7 @@ export default function App() {
                 </div>
               )}
             </div>
-            <button onClick={() => { localStorage.removeItem(TOKEN_KEY); setIsAuthenticated(false); setPinInput(''); }} style={{ background: '#fef2f2', border: '1px solid #fecaca', padding: '8px', borderRadius: '10px', cursor: 'pointer', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Blocca App">
+            <button onClick={() => { safeRemove(TOKEN_KEY); setIsAuthenticated(false); setPinInput(''); }} style={{ background: '#fef2f2', border: '1px solid #fecaca', padding: '8px', borderRadius: '10px', cursor: 'pointer', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Blocca App">
               <Unlock size={20} />
             </button>
           </div>
