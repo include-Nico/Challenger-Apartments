@@ -1,3 +1,7 @@
+// Deve restare il primissimo import del file: attiva gli ascoltatori di errore prima che
+// qualunque altro modulo (App.jsx compreso) venga anche solo caricato. Vedi errorReporter.js.
+import './errorReporter.js'
+
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'

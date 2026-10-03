@@ -111,6 +111,55 @@ class AuthRequest(BaseModel):
     password: str = Field(min_length=1, max_length=128)
 
 
+# --- Errori segnalati dal browser (vedi frontend/src/errorReporter.js) ---
+# Nessuna autenticazione richiesta: un errore può capitare anche prima del login, ed è
+# proprio lì che serve vederlo. In memoria, si perde al riavvio del servizio: va bene,
+# serve solo a leggere gli ultimi errori mentre si fa debug, non è un log permanente.
+CLIENT_ERRORS = deque(maxlen=200)
+_client_error_hits = defaultdict(deque)
+CLIENT_ERROR_MAX_PER_WINDOW = 20
+CLIENT_ERROR_WINDOW_SECONDS = 60
+
+
+class ClientErrorReport(BaseModel):
+    message: str = Field(max_length=2000)
+    stack: str = Field(default="", max_length=4000)
+    source: str = Field(default="window.onerror", max_length=60)
+    url: str = Field(default="", max_length=500)
+    user_agent: str = Field(default="", max_length=500)
+
+
+@app.post("/api/client-error")
+def report_client_error(payload: ClientErrorReport, request: Request):
+    ip = _client_ip(request)
+    now = time.time()
+    hits = _client_error_hits[ip]
+    while hits and now - hits[0] > CLIENT_ERROR_WINDOW_SECONDS:
+        hits.popleft()
+    if len(hits) >= CLIENT_ERROR_MAX_PER_WINDOW:
+        return {"status": "ignored"}  # troppi in poco tempo da uno stesso IP: probabile loop
+    hits.append(now)
+
+    entry = {
+        "time": datetime.now(ROME).isoformat(timespec="seconds"),
+        "ip": ip,
+        "source": payload.source,
+        "message": payload.message,
+        "stack": payload.stack,
+        "url": payload.url,
+        "user_agent": payload.user_agent,
+    }
+    CLIENT_ERRORS.append(entry)
+    print(f"🔴 ERRORE CLIENT [{payload.source}] {payload.user_agent[:70]}\n   {payload.message}\n   {payload.stack[:500]}")
+    return {"status": "ok"}
+
+
+@app.get("/api/client-error", dependencies=[Depends(require_auth)])
+def list_client_errors():
+    """Ultimi errori segnalati dai browser, più recenti per primi. Protetto da login."""
+    return {"errors": list(CLIENT_ERRORS)[::-1]}
+
+
 @app.post("/api/auth")
 def login(payload: AuthRequest, request: Request):
     ip = _client_ip(request)

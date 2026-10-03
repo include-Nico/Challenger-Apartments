@@ -1,4 +1,5 @@
 import { Component } from 'react';
+import { reportError } from './errorReporter.js';
 
 // Se un errore javascript non previsto sfugge a tutti i controlli, mostra un messaggio invece
 // di lasciare una schermata bianca senza spiegazione.
@@ -14,6 +15,7 @@ export default class ErrorBoundary extends Component {
 
   componentDidCatch(error, info) {
     console.error('ChallengerHouse - errore non gestito:', error, info);
+    reportError('react-error-boundary', error && error.message, error && error.stack);
   }
 
   render() {
