@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { reportError } from './errorReporter.js';
 import { 
   AreaChart, Area, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, 
   CartesianGrid, Legend 
@@ -25,10 +26,19 @@ const safeRemove = (key) => { try { localStorage.removeItem(key); } catch { /* i
 // fetch con token Bearer; se il server risponde 401 (token scaduto/non valido) forza il logout
 const authFetch = async (url, options = {}) => {
   const token = safeGet(TOKEN_KEY);
-  const res = await fetch(url, {
-    ...options,
-    headers: { ...(options.headers || {}), Authorization: `Bearer ${token}` }
-  });
+  let res;
+  try {
+    res = await fetch(url, {
+      ...options,
+      headers: { ...(options.headers || {}), Authorization: `Bearer ${token}` }
+    });
+  } catch (err) {
+    // La richiesta non è nemmeno arrivata al server (rete assente, CORS, server che si sta
+    // avviando...). Senza questo, un errore così sarebbe invisibile: non è un'eccezione che
+    // "esplode" da qualche parte, e spesso viene gestita in silenzio da chi ha chiamato authFetch.
+    reportError('authFetch-network', `${err.message || err} (${url})`, err.stack);
+    throw err;
+  }
   if (res.status === 401) {
     safeRemove(TOKEN_KEY);
     window.dispatchEvent(new Event('challenger-logout'));
@@ -85,6 +95,7 @@ export default function App() {
         setPinInput('');
       }
     } catch (err) {
+      reportError('login-network', `${err.message || err}`, err.stack);
       setLoginError("Server in avvio. Riprova tra qualche secondo...");
       setPinInput('');
     }
@@ -180,7 +191,10 @@ export default function App() {
       try {
         const res = await authFetch(`${API_BASE_URL}/api/neighbourhoods`);
         if (res.ok) setAllNeighbourhoods((await res.json()).neighbourhoods || []);
-      } catch (e) { console.warn("API Quartieri non raggiungibile"); }
+      } catch (e) {
+        console.warn("API Quartieri non raggiungibile");
+        reportError('fetch-neighbourhoods', e.message || String(e), e.stack);
+      }
     };
     fetchNeighbourhoods();
   }, [isAuthenticated]);
@@ -247,8 +261,9 @@ export default function App() {
       
       const data = await res.json();
       setRawPricingData(data.results || []);
-    } catch (err) { 
-      setServerError(true); 
+    } catch (err) {
+      reportError('fetch-pricing', err.message || String(err), err.stack);
+      setServerError(true);
     } finally { 
       setLoading(false); 
     }
